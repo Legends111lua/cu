@@ -1,0 +1,1013 @@
+local a a={cache={},load=function(b)if not a.cache[b]then a.cache[b]={c=a[b]()}
+end return a.cache[b].c end}do function a.a()local b=function(b)error(b,0)end
+return b end function a.b()local b=function()return debug.info(1,'n')end local c
+=b()~='inline_test'return{strict=not c,batch=false}end function a.c()local b,c,d
+,e=a.load'a',a.load'b',{n=0},function(b,c)local d,e=coroutine.create(xpcall),
+function(d)return debug.traceback(d,3)end local f,g,h=coroutine.resume(d,b,e,c)
+if coroutine.status(d)~='dead'then return false,debug.traceback(d,
+'attempt to yield in reactive scope')end return g,h end local f=function()return
+d[d.n]end local g,h,i,j,k,l,m=function()local g=f()if not g then local h=debug.
+info(2,'n')return b(string.format(
+'cannot use %s() outside a stable or reactive scope',tostring(h)))elseif g.
+effect then b
+[[cannot create a new reactive scope inside another reactive scope]]end return g
+end,function(g,h)table.insert(g,h)table.insert(h.parents,g)end,function(g)local
+h=d.n+1 d.n=h d[h]=g end,function()local g=d.n d.n=g-1 d[g]=nil end,function(g,h
+)if g.cleanups then table.insert(g.cleanups,h)else g.cleanups={h}end end,
+function(g)if g.cleanups then for h,i in next,g.cleanups do local j,k=pcall(i)if
+not j then b(string.format('cleanup error: %s',tostring(k)))end end table.clear(
+g.cleanups)end end,function(g,h)local i,j=(table.find(g,h)),#g g[i]=g[j]g[j]=nil
+end local n=function(n)local o=n.parents for p,q in o do m(q,n)o[p]=nil end end
+local function destroy(o)l(o)n(o)if o.owner then m((o.owner.owned),o)o.owner=
+false end if o.owned then local p=o.owned while p[1]do destroy(p[1])end end end
+local o,p=function(o)if o.owned then local p=o.owned while p[1]do destroy(p[1])
+end end end,{n=0}local q,r,s=function(q)if c.strict then local r=q.cache for s=1
+,2 do local t=q.cache l(q)o(q)i(q)local u,v=e((q.effect),t)j()if not u then
+table.clear(p)p.n=0 b(string.format('effect stacktrace:\n%s',tostring(v)))end q.
+cache=v end return r~=q.cache else local r=q.cache l(q)o(q)i(q)local s,t=pcall((
+q.effect),q.cache)j()if not s then table.clear(p)p.n=0 b(string.format(
+'effect stacktrace:\n%s\n',tostring(t)))end q.cache=t return r~=t end end,
+function(q)local r=p.n while q[1]do r=r+1 p[r]=q[1]n(q[1])end p.n=r end,function
+()return p.n end local t,u,v,w,x,y,z=function(t)local u=t+1 while u<=p.n do
+local v=p[u]if v.owner and q(v)then r(v)end p[u]=false u=u+1 end p.n=t end,
+function(t)local u=p.n r(t)if c.batch then return end local v=u+1 while v<=p.n
+do local w=p[v]if w.owner and q(w)then r(w)end p[v]=false v=v+1 end p.n=u end,
+function(t)local u=f()if u and u.effect then h(t,u)end end,function(t,u,v)local
+w={cache=v,effect=u,cleanups=false,context=false,owner=t,owned=false,parents={}}
+if t then if t.owned then table.insert(t.owned,w)else t.owned={w}end end return
+w end,function(t)return{cache=t}end,function(t)return{unpack(t)}end,function(t,u
+,v)if t.context then t.context[u]=v else t.context={[u]=v}end end return table.
+freeze{push_scope=i,pop_scope=j,evaluate_node=q,get_scope=f,assert_stable_scope=
+g,push_cleanup=k,destroy=destroy,flush_cleanups=l,push_child_to_scope=v,
+update_descendants=u,push_child=h,create_node=w,create_source_node=x,
+get_children=y,flush_update_queue=t,get_update_queue_length=s,set_context=z,
+scopes=d}end function a.d()local b,c=a.load'a',a.load'c'local d,e,f,g,h=c.
+create_node,c.push_scope,c.pop_scope,c.destroy,{}local i=function(i)local j=d(
+false,false,false)h[j]=true local k=function()if not h[j]then b
+'root already destroyed'end h[j]=nil g(j)end e(j)local l=function(l)return debug
+.traceback(l,3)end local m={xpcall(i,l,k)}f()if not m[1]then k()b(string.format(
+'error while running root():\n\n%s',tostring(m[2])))end return k,unpack(m,2)end
+return i end function a.e()local b=a.load'c'local c,d,e=b.create_node,b.
+assert_stable_scope,b.evaluate_node function create_implicit_effect(f,g)e(c(d(),
+f,g))end local f,g,h=function(f)((f.instance))[f.property]=f.source()return f
+end,function(f)f.instance.Parent=f.parent()return f end,function(f)local g,h,i=f
+.cur_children_set,f.new_children_set,f.children()if type(i)~='table'then i={i}
+end local function process_child(j)if type(j)=='table'then for k,l in next,j do
+process_child(l)end else if h[j]then return end h[j]=true if not g[j]then j.
+Parent=f.instance else g[j]=nil end end end process_child(i)for j in next,g do j
+.Parent=nil end table.clear(g)f.cur_children_set,f.new_children_set=h,g return f
+end return{property=function(i,j,k)return create_implicit_effect(f,{instance=i,
+property=j,source=k})end,parent=function(i,j)return create_implicit_effect(g,{
+instance=i,parent=j})end,children=function(i,j)return create_implicit_effect(h,{
+instance=i,cur_children_set={},new_children_set={},children=j})end}end function
+a.f()local b=table.freeze{}local c,d=function(c)return getmetatable(c)==b end,
+function(c,d)local e={priority=d or 1,callback=c}setmetatable(e,b)return table.
+freeze(e)end return function()return d,c end end function a.g()local b,c,d,e,f=a
+.load'b',a.load'a',a.load'e',a.load'f'()local g=(a.load'c')local h,i,j=function(
+)if free_caches then local h=free_caches free_caches=nil return h else return{
+events={},actions=setmetatable({},{__index=function(h,i)h[i]={}return h[i]end}),
+nested_debug=setmetatable({},{__index=function(h,i)h[i]={}return h[i]end}),
+nested_stack={}}end end,function(h)free_caches=h end,{}for k,l in{CFrame=CFrame,
+Color3=Color3,UDim=UDim,UDim2=UDim2,Vector2=Vector2,Vector3=Vector3,Rect=Rect}do
+j[k]=l.new end local k=function(k,l)if not l then c
+[[attempt to call a constructor returned by create() with no properties]]end
+local m,n,o=b.strict,l.Parent,h()local p,q,r,s,t=o.events,o.actions,o.
+nested_debug,o.nested_stack,1 repeat for u,v in l do local w=false repeat if u==
+'Parent'then w=true break end if type(u)=='string'then if m then if r[t][u]then
+c(string.format('duplicate property %s at depth %s',tostring(u),tostring(t)))end
+r[t][u]=true end if type(v)=='table'then local x=j[typeof((k)[u])]if x==nil then
+c(string.format('cannot aggregate type %s for property %s',tostring(typeof(v)),
+tostring(u)))end(k)[u]=x(unpack(v))elseif type(v)=='function'then if typeof((k)[
+u])=='RBXScriptSignal'then p[u]=v else d.property(k,u,v)end else(k)[u]=v end
+elseif type(u)=='number'then if type(v)=='function'then d.children(k,v)elseif
+type(v)=='table'then if f(v)then table.insert(q[(v).priority],((v).callback))
+else table.insert(s,v)table.insert(s,t+1)end else(v).Parent=k end end w=true
+until true if not w then break end end t=(table.remove(s))l=(table.remove(s))
+until not l for u,v in next,p do(k)[u]:Connect(v)end for u,v in next,q do for w,
+x in next,v do x(k)end end if n then if type(n)=='function'then d.parent(k,n)
+else k.Parent=n end end table.clear(p)for u,v in next,q do table.clear(v)end if
+m then table.clear(r)end table.clear(s)i(o)return k end return k end function a.
+h()local b,c=a.load'd',a.load'g'local d=function(d,e)return b(function()local f=
+d()if e then c(e,{f})end end)end return d end function a.i()return{Part={
+Material=Enum.Material.SmoothPlastic,Size=Vector3.new(1,1,1),Anchored=true},
+BillboardGui={ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},
+CanvasGroup=nil,Frame={BackgroundColor3=Color3.new(1,1,1),BorderColor3=Color3.
+new(0,0,0),BorderSizePixel=0},ImageButton={BackgroundColor3=Color3.new(1,1,1),
+BorderColor3=Color3.new(0,0,0),BorderSizePixel=0,AutoButtonColor=false},
+ImageLabel={BackgroundColor3=Color3.new(1,1,1),BorderColor3=Color3.new(0,0,0),
+BorderSizePixel=0},ScreenGui={ResetOnSpawn=false,ZIndexBehavior=Enum.
+ZIndexBehavior.Sibling},ScrollingFrame={BackgroundColor3=Color3.new(1,1,1),
+BorderColor3=Color3.new(0,0,0),BorderSizePixel=0,ScrollBarImageColor3=Color3.
+new(0,0,0)},SurfaceGui={ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.
+Sibling,PixelsPerStud=50,SizingMode=Enum.SurfaceGuiSizingMode.PixelsPerStud},
+TextBox={BackgroundColor3=Color3.new(1,1,1),BorderColor3=Color3.new(0,0,0),
+BorderSizePixel=0,ClearTextOnFocus=false,Font=Enum.Font.SourceSans,Text='',
+TextColor3=Color3.new(0,0,0)},TextButton={BackgroundColor3=Color3.new(1,1,1),
+BorderColor3=Color3.new(0,0,0),BorderSizePixel=0,AutoButtonColor=false,Font=Enum
+.Font.SourceSans,Text='',TextColor3=Color3.new(0,0,0)},TextLabel={
+BackgroundColor3=Color3.new(1,1,1),BorderColor3=Color3.new(0,0,0),
+BorderSizePixel=0,Font=Enum.Font.SourceSans,Text='',TextColor3=Color3.new(0,0,0)
+},UIListLayout={SortOrder=Enum.SortOrder.LayoutOrder},UIGridLayout={SortOrder=
+Enum.SortOrder.LayoutOrder},UITableLayout={SortOrder=Enum.SortOrder.LayoutOrder}
+,UIPageLayout={SortOrder=Enum.SortOrder.LayoutOrder},VideoFrame={
+BackgroundColor3=Color3.new(1,1,1),BorderColor3=Color3.new(0,0,0),
+BorderSizePixel=0},ViewportFrame={BackgroundColor3=Color3.new(1,1,1),
+BorderColor3=Color3.new(0,0,0),BorderSizePixel=0}}end function a.j()local b,c,d,
+e=a.load'a',a.load'i',a.load'g',{}setmetatable(e,{__index=function(f,g)local h,i
+=pcall(Instance.new,g)if not h then b(string.format(
+'invalid class name, could not create instance of class %s',tostring(g)))end
+local j=c[g]if j then for k,l in next,j do(i)[k]=l end end local k=function(k)
+return d(i:Clone(),k)end f[g]=k return k end})local f,g=function(f)return e[f]
+end,function(f)return function(g)local h=f:Clone()if not h then b
+'attempt to clone a non-archivable instance'end return d(h,g)end end local h=
+function(h)if type(h)=='string'then return f(h)elseif typeof(h)=='Instance'then
+return g(h)else b('bad argument #1, expected string or instance, got '..typeof(h
+))return nil end end return(h)end function a.k()local b=a.load'c'local c,d,e=b.
+create_source_node,b.push_child_to_scope,b.update_descendants local f=function(f
+)local g=c(f)return function(...)if select('#',...)==0 then d(g)return g.cache
+end local h=(...)if g.cache==h and(type(h)~='table'or table.isfrozen(h))then
+return h end g.cache=h e(g)return h end end return f end function a.l()local b=a
+.load'c'local c,d,e=b.create_node,b.assert_stable_scope,b.evaluate_node local f=
+function(f,g)local h=c(d(),f,g)e(h)end return f end function a.m()local b=a.load
+'c'local c,d,e,f=b.create_node,b.push_child_to_scope,b.assert_stable_scope,b.
+evaluate_node local g=function(g)local h=c(e(),g,false)f(h)return function()d(h)
+return h.cache end end return g end function a.n()local b,c=a.load'a',a.load'c'
+local d,e,f=c.get_scope,c.push_cleanup,function(d)return typeof(d)==
+'RBXScriptConnection'and function()d:Disconnect()end or(d.Disconnect and
+function()d:Disconnect()end or(d.Destroy and function()d:Destroy()end or(d.
+disconnect and function()d:disconnect()end or(d.destroy and function()d:destroy(
+)end or(typeof(d)=='Instance'and function()d:Destroy()end or b
+'cannot cleanup given object')))))end local g=function(g)local h=d()if not h
+then b'cannot cleanup outside a stable or reactive scope'end if type(g)==
+'function'then e(h,g)else e(h,f(g))end end return g end function a.o()local b=a.
+load'c'local c=b.get_scope local d=function(d)local e=c()if e then local f=e.
+effect e.effect=false local g,h=pcall(d)e.effect=f if not g then error(h,0)end
+return h else return d()end end return d end function a.p()local b=function(b)
+return(type(b)=='function'and{(b())}or{b})[1]end return b end function a.q()
+local b,c,d=a.load'b',a.load'a',a.load'c'local e=function(e)local f,g=(b.batch)
+if not f then b.batch=true g=d.get_update_queue_length()end local h,i=pcall(e)if
+not f then b.batch=false d.flush_update_queue(g)end if not h then c(string.
+format('error occured while batching updates: %s',tostring(i)))end end return e
+end function a.r()local b,c=a.load'a',a.load'c'local d,e,f,g,h,i,j=c.create_node
+,c.get_scope,c.push_scope,c.pop_scope,c.set_context,newproxy(),0 local k=
+function(...)j=j+1 local k,l,m=j,select('#',...)>0,...return function(...)local
+n=e()if select('#',...)==0 then while n do local o=false repeat local p=n.
+context if not p then n=n.owner o=true break end local q=(p)[k]if q==nil then n=
+n.owner o=true break end return((q~=i and{q}or{nil})[1])until true if not o then
+break end end if l~=nil then return m else b
+[[attempt to get context when no context is set and no default context is set]]
+end else if not n then return b'attempt to set context outside of a vide scope'
+end local o,p=...local q=d(n,false,false)h(q,k,(o==nil and{i}or{o})[1])f(q)local
+r=function(r)return debug.traceback(r,3)end local s,t=xpcall(p,r)g()if not s
+then b(string.format('error while running context:\n\n%s',tostring(t)))end
+return t end return nil end end return k end function a.s()local b,c=a.load'a',a
+.load'c'local d,e,f,g,h,i,j=c.create_node,c.evaluate_node,c.push_child_to_scope,
+c.destroy,c.assert_stable_scope,c.push_scope,c.pop_scope local k=function(k)
+local l=h()return function(m)local n,o local p=function(p)local q=m[k()]if q==o
+then return p end o=q if n then g(n)n=nil end if q==nil then return nil end if
+type(q)~='function'then b'map must map a value to a function'end local r=d(l,
+false,false)n=r i(r)local s,t=pcall(q)j()if not s then error(t,0)end return t
+end local q=d(l,p,nil)e(q)return function()f(q)return q.cache end end end return
+k end function a.t()local b=a.load's'local c=function(c,d,e)local f=function()
+return not not c()end return b(f){[true]=d,[false]=e}end return c end function a
+.u()local b,c,d=a.load'a',a.load'b',a.load'c'local e,f,g,h,i,j,k,l,m,n=d.
+create_node,d.create_source_node,d.push_child_to_scope,d.update_descendants,d.
+assert_stable_scope,d.push_scope,d.pop_scope,d.evaluate_node,d.destroy,function(
+e)if not c.strict then return end for f,g in next,e do local h=false repeat if
+type(g)=='table'or type(g)=='userdata'or type(g)=='function'then h=true break
+end b'table source map cannot return primitives'h=true until true if not h then
+break end end end local o,p=function(o,p)local q=i()local r,s,t,u,v,w=e(q,false,
+false),{},{},{},{},{}local x=function(x)for y in next,s do if x[y]==nil then
+table.insert(v,y)end end for y,z in next,v do m(w[z])s[z]=nil t[z]=nil u[z]=nil
+w[z]=nil end table.clear(v)j(r)for y,z in next,x do local A=s[y]if A~=z then if
+A==nil then local B=e(r,false,false)w[y]=B local C=f(z)j(B)local D,E=pcall(p,
+function()g(C)return C.cache end,y)k()if not D then k()error(E,0)end u[y]=C t[y]
+=E else u[y].cache=z h(u[y])end s[y]=z end end k()local y=table.create(#w)for z,
+A in next,t do table.insert(y,A)end n(y)return y end local y=e(q,function()
+return x(o())end,false)l(y)return function()g(y)return y.cache end end,function(
+o,p)local q=i()local r,s,t,u,v,w=e(q,false,false),{},{},{},{},{}local x=function
+(x)local y,z=s,t if c.strict then local A={}for B,C in next,x do if A[C]~=nil
+then b'duplicate table value detected'end A[C]=true end end j(r)for A,B in next,
+x do z[B]=A local C=y[B]if C==nil then local D=e(r,false,false)w[B]=D local E=f(
+A)j(D)local F,G=pcall(p,B,function()g(E)return E.cache end)k()if not F then k()
+error(G,0)end v[B]=E u[B]=G else if C~=A then v[B].cache=A h(v[B])end y[B]=nil
+end end k()for A in next,y do m(w[A])u[A]=nil v[A]=nil w[A]=nil end table.clear(
+y)s,t=z,y local A=table.create(#w)for B,C in next,u do table.insert(A,C)end n(A)
+return A end local y=e(q,function()return x(o())end,false)l(y)return function()
+g(y)return y.cache end end return function()return o,p end end function a.v()
+local b,c=a.load'a',a.load'c'local d,e,f,g,h,i,j,k,l=c.create_node,c.
+create_source_node,c.assert_stable_scope,c.evaluate_node,c.update_descendants,c.
+push_child_to_scope,120,0.0001,function(d,e,f)return Vector3.new(d,e,f)end local
+m=l(0,0,0)local n,o,p={number=function(n)return l(n,0,0),m end,CFrame=function(n
+)return n.Position,l(n:ToEulerAnglesXYZ())end,Color3=function(n)return l(n.R,n.G
+,n.B),m end,UDim=function(n)return l(n.Scale,n.Offset,0),m end,UDim2=function(n)
+return l(n.X.Scale,n.X.Offset,n.Y.Scale),l(n.Y.Offset,0,0)end,Vector2=function(n
+)return l(n.X,n.Y,0),m end,Vector3=function(n)return n,m end,Rect=function(n)
+return l(n.Min.X,n.Min.Y,n.Max.X),l(n.Max.Y,0,0)end},{number=function(n,o)return
+n.X end,CFrame=function(n,o)return CFrame.new(n)*CFrame.fromEulerAnglesXYZ(o.X,o
+.Y,o.Z)end,Color3=function(n)return Color3.new(math.clamp(n.X,0,1),math.clamp(n.
+Y,0,1),math.clamp(n.Z,0,1))end,UDim=function(n)return UDim.new(n.X,math.round(n.
+Y))end,UDim2=function(n,o)return UDim2.new(n.X,math.round(n.Y),n.Z,math.round(o.
+X))end,Vector2=function(n)return Vector2.new(n.X,n.Y)end,Vector3=function(n)
+return n end,Rect=function(n,o)return Rect.new(n.X,n.Y,n.Z,o.X)end},{__index=
+function(n,o)b(string.format('cannot spring type %s',tostring(o)))end}
+setmetatable(n,p)setmetatable(o,p)local q={}setmetatable(q,{__mode='v'})local r,
+s,t=function(r,s,t)local u,v,w=f(),2*math.pi/(s or 1),t or 1 local x,y=v^2,2*v
+local z=w*y if z>j*2 then b
+[[spring damping too high, consider reducing damping or increasing period]]end
+local A,B={k=x,c=z,x0_123=m,x1_123=m,v_123=m,x0_456=m,x1_456=m,v_456=m,
+source_value=false},e(false)local C=function()local C=r()A.x1_123,A.x1_456=n[
+typeof(C)](C)A.source_value=C q[A]=B return C end local D=d(u,C,false)g(D)A.
+x0_123,A.x0_456=A.x1_123,A.x1_456 B.cache=A.source_value return function(...)if
+select('#',...)==0 then i(B)return B.cache end local E=(...)A.x0_123,A.x0_456=n[
+typeof(E)](E)A.v_123=m A.v_456=m q[A]=B B.cache=E return E end end,function(r)
+for s in next,q do local t,u,v,w,x,y,z,A=s.k,s.c,s.x0_123,s.x1_123,s.v_123,s.
+x0_456,s.x1_456,s.v_456 local B,C=v-w,y-z local D,E,F,G=B*-t,C*-t,x*-u,A*-u
+local H,I=(D+F)*r,(E+G)*r local J,K=x+H,A+I local L,M=v+J*r,y+K*r s.x0_123,s.
+x0_456=L,M s.v_123,s.v_456=J,K end end,{}local u=function()for u,v in next,q do
+local w,x,y,z,A,B=u.x0_123,u.x1_123,u.v_123,u.x0_456,u.x1_456,u.v_456 local C,D=
+w-x,z-A if(y+B+C+D).Magnitude<k then table.insert(t,u)v.cache=u.source_value
+else v.cache=o[typeof(u.source_value)](w,z)end h(v)end for u,v in next,t do q[v]
+=nil end table.clear(t)end return function()local v=0 return r,function(w)v=v+w
+while v>1/j do v=v-1/j s(1/j)end u()end end end function a.w()local b,c=a.load
+'f'(),a.load'n'local d=function(d,e)return b(function(f)local g=f:
+GetPropertyChangedSignal(d):Connect(function()e((f)[d])end)c(function()g:
+Disconnect()end)e((f)[d])end)end return d end function a.x()local b,c,d,e,f,g,h,
+i,j,k,l,m,n,o,p,q,r={major=0,minor=3,patch=1},a.load'd',a.load'h',a.load'j',a.
+load'g',a.load'k',a.load'l',a.load'm',a.load'n',a.load'o',a.load'p',a.load'q',a.
+load'r',a.load's',a.load't',a.load'u'()local s,t=a.load'v'()local u,v,w,x,y=a.
+load'f'(),a.load'w',a.load'a',a.load'b',function(u)if game then end t(u)if game
+then end end local z=game and game:GetService'RunService'.Heartbeat:Connect(
+function(z)task.defer(y,z)end)local A={version=b,root=c,mount=d,create=e,source=
+g,effect=h,derive=i,switch=o,show=p,indexes=q,values=r,cleanup=j,untrack=k,read=
+l,batch=m,context=n,spring=s,action=u,changed=v,strict=(nil),apply=function(A)
+return function(B)f(A,B)return A end end,step=function(A)if z then z:Disconnect(
+)z=nil end y(A)end}setmetatable(A,{__index=function(B,C)if C=='strict'then
+return x.strict else w(string.format('%s is not a valid member of vide',
+tostring(tostring(C))))end end,__newindex=function(B,C,D)if C=='strict'then x.
+strict=D else w(string.format('%s is not a valid member of vide',tostring(
+tostring(C))))end end})return A end function a.y()local b=function(b)local c,d={
+},false if string.match(b,'%?%s*$')then d=true b=string.gsub(b,'%?%s*$','')end
+for e in string.gmatch(b,'([^|]+)')do local f=string.match(e,'^%s*(.-)%s*$')if
+string.match(f,'%?%s*$')then d=true f=string.gsub(f,'%?%s*$','')end table.
+insert(c,f)end if d then table.insert(c,'nil')end return c end local c=function(
+c,d)if type(c)~='table'then error('First parameter must be a table, got '..type(
+c),2)end if type(d)~='table'then error('Second parameter must be a table, got '
+..type(d),2)end for e,f in pairs(d)do if type(f)~='string'then error(
+"Schema value for key '"..tostring(e).."' must be a string, got "..type(f),2)end
+local g=c[e]local h,i,j=type(g),b(f),false for k,l in ipairs(i)do if h==l then j
+=true break end end if not j then error("Type mismatch for key '"..tostring(e)..
+"': "..'expected '..f..', got '..h,2)end end end return c end function a.z()
+local b,c=a.load'y',a.load'x'local d=c.create return function(e)b(e,{size=
+'number?'})local f=e.size or 12 return d'Folder'{Name='Shadow',d'ImageLabel'{
+Name='ambientShadow',AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,
+Image='rbxassetid://1316045217',ImageColor3=Color3.new(),ImageTransparency=0.88,
+Position=UDim2.fromScale(0.5,0.5),ScaleType=Enum.ScaleType.Slice,Size=UDim2.new(
+1,f,1,f),SliceCenter=Rect.new(10,10,118,118),ZIndex=0},d'ImageLabel'{Name=
+'penumbraShadow',AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,Image
+='rbxassetid://1316045217',ImageColor3=Color3.new(),ImageTransparency=0.86,
+Position=UDim2.fromScale(0.5,0.5),ScaleType=Enum.ScaleType.Slice,Size=UDim2.new(
+1,f,1,f),SliceCenter=Rect.new(10,10,118,118),ZIndex=0},d'ImageLabel'{Name=
+'umbraShadow',AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,Image=
+'rbxassetid://1316045217',ImageColor3=Color3.new(),ImageTransparency=0.84,
+Position=UDim2.fromScale(0.5,0.5),ScaleType=Enum.ScaleType.Slice,Size=UDim2.new(
+1,8,1,8),SliceCenter=Rect.new(10,10,118,118),ZIndex=0}}end end function a.A()
+local b=a.load'x'local c,d,e,f=b.derive,b.create,UDim2.new(0,1,1,0),UDim2.new(1,
+0,0,1)return function(g)local h=g.mode return d'Frame'{Name='Separator',
+BackgroundColor3=Color3.fromHSV(0,0,0.15),BorderColor3=Color3.new(),
+BorderSizePixel=0,LayoutOrder=0,Size=c(function()return(h()=='vertical'and{e}or{
+f})[1]end),d'UIFlexItem'{Name='UIFlexItem'}}end end function a.B()local b=a.load
+'x'local c,d,e=b.create,game:GetService'UserInputService',12 local f,g={bottom={
+position=UDim2.new(0,0,1,0),size=UDim2.new(1,0,0,e),anchorPoint=Vector2.new(0,1)
+},right={position=UDim2.new(1,0,0,0),size=UDim2.new(0,e,1,0),anchorPoint=Vector2
+.new(1,0)},corner={position=UDim2.new(1,0,1,0),size=UDim2.new(0,e,0,e),
+anchorPoint=Vector2.new(1,1)}},Enum.UserInputType.MouseMovement return function(
+h)local i,j,k,l,m,n,o=h.handleMode,h.resizeMode,h.resizeStart,h.startSize,(h.
+isResizing)d.InputChanged:Connect(function(p)if p.UserInputType~=g then return
+end if p.UserInputState==Enum.UserInputState.Change then if m()then local q=p.
+Position if i=='corner'then n.Size=UDim2.fromOffset(l().X+q.X-o.X,l().Y+q.Y-o.Y)
+elseif i=='right'then n.Size=UDim2.fromOffset(l().X+q.X-o.X,0)elseif i=='bottom'
+then n.Size=UDim2.fromOffset(0,l().Y+q.Y-o.Y)end end elseif p.UserInputState==
+Enum.UserInputState.End then m(false)end end)local p=f[i]return c'Frame'{
+BackgroundTransparency=1,Position=p.position,Size=p.size,AnchorPoint=p.
+anchorPoint,ZIndex=10,b.changed('Parent',function(q)n=q end),c'UIFlexItem'{},
+InputBegan=function(q)if q.UserInputType==Enum.UserInputType.MouseButton1 then
+m(true)l(n.AbsoluteSize)j(i)k(q.Position)o=q.Position end end,InputEnded=
+function(q)if q.UserInputType==Enum.UserInputType.MouseButton1 then m(false)end
+end,MouseEnter=function()j(i)end}end end function a.C()local b,c,d=game:
+GetService'UserInputService',game:GetService'TweenService',a.load'x'local e,f,g,
+h,i,j,k,l=d.cleanup,d.effect,d.create,d.source,a.load'z',a.load'A',a.load'B',
+workspace.CurrentCamera.ViewportSize local m,n=l.X,l.Y-58 local o,p=function(o,p
+)local q,r=o.X.Offset,o.Y.Offset local s,t=math.clamp(q,0,m-p.X),math.clamp(r,0,
+n-p.Y)return UDim2.fromOffset(s,t)end,TweenInfo.new(0.3)local q,r=function(q,r,s
+,t,u,v)local w,x=v.Position.X-t.X,v.Position.Y-t.Y local y,z=u.X.Offset+w,u.Y.
+Offset+x local A=o(UDim2.fromOffset(y,z),q.AbsoluteSize)local B=(Vector2.new(A.X
+,A.Y)-Vector2.new(y,z)).Magnitude q:TweenPosition(A,nil,Enum.EasingStyle.Back,(B
+/B)/3,true)c:Create(s,p,{Transparency=0.9}):Play()s.Position=A end,Enum.
+UserInputType.MouseMovement local function Window(s)local t,u=h(s.size or UDim2.
+fromOffset(300,340)),s.isOpenedSources for v,w in s.categories do f(function()
+local x=u[v]()if not x then return end for y,z in u do local A=false repeat if y
+==v then A=true break end z(false)A=true until true if not A then break end end
+end)end local v,w,x,y=h(false),(h(false))e(b.InputEnded:Connect(function(z)if v(
+)and z.UserInputType==Enum.UserInputType.MouseButton1 then v(false)end end))
+local z,A e(b.InputChanged:Connect(function(B)if v()and B.UserInputType==r then
+q(z,t,A,x,y,B)end end))A=g'Frame'{Name='Frame1',BackgroundColor3=Color3.fromHSV(
+0,0,0.1),BackgroundTransparency=0.65,ClipsDescendants=true,Position=UDim2.
+fromOffset(20,20),Size=t,Visible=true,ZIndex=-1,g'UICorner'{CornerRadius=UDim.
+new(0,8)}}z=g'Frame'{Name='Frame1',BackgroundColor3=Color3.fromHSV(0,0,0.1),
+ClipsDescendants=false,Position=UDim2.fromOffset(20,20),Size=t,InputBegan=
+function(B)if B.UserInputType==Enum.UserInputType.MouseButton1 then if not w()
+then y=z.Position x=B.Position v(true)end end end,g'UICorner'{CornerRadius=UDim.
+new(0,8)},k{handleMode='corner',resizeMode=h(),resizeStart=h(),startSize=h(),
+isResizing=w},g'Frame'{BackgroundTransparency=1,Size=UDim2.new(1,0,1,0),Name=
+'Content',s.containers,g'UIListLayout'{FillDirection=Enum.FillDirection.
+Horizontal,HorizontalFlex=Enum.UIFlexAlignment.Fill,SortOrder=Enum.SortOrder.
+LayoutOrder,VerticalAlignment=Enum.VerticalAlignment.Center},g'Frame'{Name=
+'Sidebar',BackgroundTransparency=1,Size=UDim2.new(0,30,1,0),g'UIPadding'{
+PaddingBottom=UDim.new(0,4),PaddingLeft=UDim.new(0,4),PaddingRight=UDim.new(0,4)
+,PaddingTop=UDim.new(0,4)},g'UIFlexItem'{},g'Frame'{Name='Categories',
+BackgroundTransparency=1,Size=UDim2.fromScale(1,1),g'UIListLayout'{
+HorizontalAlignment=Enum.HorizontalAlignment.Center,Padding=UDim.new(0,1),
+SortOrder=Enum.SortOrder.LayoutOrder},s.categories},g'UIListLayout'{SortOrder=
+Enum.SortOrder.LayoutOrder,VerticalFlex=Enum.UIFlexAlignment.Fill}},j{mode=h
+'vertical'}},i{},g'UISizeConstraint'{MinSize=Vector2.new(300,340),MaxSize=
+Vector2.new(500,540)}}return z,A end return Window end function a.D()return{size
+=24,image=137475077473068,columns=35,icons={activity=Vector2.zero,[
+'activity-heart']=Vector2.zero,airplay=Vector2.zero,airpods=Vector2.zero,[
+'alarm-clock']=Vector2.zero,['alarm-clock-check']=Vector2.zero,[
+'alarm-clock-minus']=Vector2.zero,['alarm-clock-off']=Vector2.zero,[
+'alarm-clock-plus']=Vector2.zero,['alert-circle']=Vector2.zero,['alert-hexagon']
+=Vector2.zero,['alert-octagon']=Vector2.zero,['alert-square']=Vector2.zero,[
+'alert-triangle']=Vector2.zero,['align-bottom']=Vector2.zero,['align-bottom-02']
+=Vector2.zero,['align-center']=Vector2.zero,['align-horizontal-centre']=Vector2.
+zero,['align-horizontal-centre-02']=Vector2.zero,['align-justify']=Vector2.zero,
+['align-left']=Vector2.zero,['align-left-02']=Vector2.zero,['align-right']=
+Vector2.zero,['align-right-02']=Vector2.zero,['align-top']=Vector2.zero,[
+'align-top-02']=Vector2.zero,['align-vertical-center']=Vector2.zero,[
+'align-vertical-center-02']=Vector2.zero,anchor=Vector2.zero,annotation=Vector2.
+zero,['annotation-alert']=Vector2.zero,['annotation-check']=Vector2.zero,[
+'annotation-dots']=Vector2.zero,['annotation-heart']=Vector2.zero,[
+'annotation-info']=Vector2.zero,['annotation-plus']=Vector2.zero,[
+'annotation-question']=Vector2.zero,['annotation-x']=Vector2.zero,announcement=
+Vector2.zero,['announcement-02']=Vector2.zero,['announcement-03']=Vector2.zero,
+archive=Vector2.zero,['arrow-block-down']=Vector2.zero,['arrow-block-left']=
+Vector2.zero,['arrow-block-right']=Vector2.zero,['arrow-block-up']=Vector2.zero,
+['arrow-circle-broken-down']=Vector2.zero,['arrow-circle-broken-down-left']=
+Vector2.zero,['arrow-circle-broken-down-right']=Vector2.zero,[
+'arrow-circle-broken-left']=Vector2.zero,['arrow-circle-broken-right']=Vector2.
+zero,['arrow-circle-broken-up']=Vector2.zero,['arrow-circle-broken-up-left']=
+Vector2.zero,['arrow-circle-broken-up-right']=Vector2.zero,['arrow-circle-down']
+=Vector2.zero,['arrow-circle-down-left']=Vector2.zero,['arrow-circle-down-right'
+]=Vector2.zero,['arrow-circle-left']=Vector2.zero,['arrow-circle-right']=Vector2
+.zero,['arrow-circle-up']=Vector2.zero,['arrow-circle-up-left']=Vector2.zero,[
+'arrow-circle-up-right']=Vector2.zero,['arrow-down']=Vector2.zero,[
+'arrow-down-left']=Vector2.zero,['arrow-down-right']=Vector2.zero,['arrow-left']
+=Vector2.zero,['arrow-narrow-down']=Vector2.zero,['arrow-narrow-down-left']=
+Vector2.zero,['arrow-narrow-down-right']=Vector2.zero,['arrow-narrow-left']=
+Vector2.zero,['arrow-narrow-right']=Vector2.zero,['arrow-narrow-up']=Vector2.
+zero,['arrow-narrow-up-left']=Vector2.zero,['arrow-narrow-up-right']=Vector2.
+zero,['arrow-right']=Vector2.zero,['arrow-square-down']=Vector2.zero,[
+'arrow-square-down-left']=Vector2.zero,['arrow-square-down-right']=Vector2.zero,
+['arrow-square-left']=Vector2.zero,['arrow-square-right']=Vector2.zero,[
+'arrow-square-up']=Vector2.zero,['arrow-square-up-left']=Vector2.zero,[
+'arrow-square-up-right']=Vector2.zero,['arrow-up']=Vector2.zero,['arrow-up-left'
+]=Vector2.zero,['arrow-up-right']=Vector2.zero,['arrows-down']=Vector2.zero,[
+'arrows-left']=Vector2.zero,['arrows-right']=Vector2.zero,['arrows-triangle']=
+Vector2.zero,['arrows-up']=Vector2.zero,['asterisk-01']=Vector2.zero,[
+'asterisk-02']=Vector2.zero,['at-sign']=Vector2.zero,atom=Vector2.zero,[
+'atom-02']=Vector2.zero,attachment=Vector2.zero,['attachment-02']=Vector2.zero,
+award=Vector2.zero,['award-02']=Vector2.zero,['award-03']=Vector2.zero,[
+'award-04']=Vector2.zero,['award-05']=Vector2.zero,backpack=Vector2.zero,bank=
+Vector2.zero,['bank-note']=Vector2.zero,['bank-note-02']=Vector2.zero,[
+'bank-note-03']=Vector2.zero,['bar-chart']=Vector2.zero,['bar-chart-02']=Vector2
+.zero,['bar-chart-03']=Vector2.zero,['bar-chart-04']=Vector2.zero,[
+'bar-chart-05']=Vector2.zero,['bar-chart-06']=Vector2.zero,['bar-chart-07']=
+Vector2.zero,['bar-chart-08']=Vector2.zero,['bar-chart-09']=Vector2.zero,[
+'bar-chart-10']=Vector2.zero,['bar-chart-11']=Vector2.zero,['bar-chart-12']=
+Vector2.zero,['bar-chart-circle']=Vector2.zero,['bar-chart-circle-02']=Vector2.
+zero,['bar-chart-circle-03']=Vector2.zero,['bar-chart-growdown']=Vector2.zero,[
+'bar-chart-growup']=Vector2.zero,['bar-chart-square']=Vector2.zero,[
+'bar-chart-square-02']=Vector2.zero,['bar-chart-square-03']=Vector2.zero,[
+'bar-chart-square-down']=Vector2.zero,['bar-chart-square-minus']=Vector2.zero,[
+'bar-chart-square-plus']=Vector2.zero,['bar-chart-square-up']=Vector2.zero,[
+'bar-line-chart']=Vector2.zero,['battery-charging']=Vector2.zero,[
+'battery-charging-02']=Vector2.zero,['battery-empty']=Vector2.zero,[
+'battery-full']=Vector2.zero,['battery-low']=Vector2.zero,['battery-mid']=
+Vector2.zero,beaker=Vector2.zero,['beaker-02']=Vector2.zero,bell=Vector2.zero,[
+'bell-02']=Vector2.zero,['bell-03']=Vector2.zero,['bell-04']=Vector2.zero,[
+'bell-minus']=Vector2.zero,['bell-off']=Vector2.zero,['bell-off-02']=Vector2.
+zero,['bell-off-03']=Vector2.zero,['bell-plus']=Vector2.zero,['bell-ringing']=
+Vector2.zero,['bell-ringing-02']=Vector2.zero,['bell-ringing-03']=Vector2.zero,[
+'bell-ringing-04']=Vector2.zero,['bezier-curve']=Vector2.zero,['bezier-curve-02'
+]=Vector2.zero,['bezier-curve-03']=Vector2.zero,['bluetooth-connect']=Vector2.
+zero,['bluetooth-off']=Vector2.zero,['bluetooth-on']=Vector2.zero,[
+'bluetooth-signal']=Vector2.zero,bold=Vector2.zero,['bold-02']=Vector2.zero,[
+'bold-square']=Vector2.zero,['book-closed']=Vector2.zero,['book-open']=Vector2.
+zero,['book-open-02']=Vector2.zero,bookmark=Vector2.zero,['bookmark-add']=
+Vector2.zero,['bookmark-check']=Vector2.zero,['bookmark-minus']=Vector2.zero,[
+'bookmark-x']=Vector2.zero,box=Vector2.zero,brackets=Vector2.zero,[
+'brackets-check']=Vector2.zero,['brackets-ellipses']=Vector2.zero,[
+'brackets-minus']=Vector2.zero,['brackets-plus']=Vector2.zero,['brackets-slash']
+=Vector2.zero,['brackets-x']=Vector2.zero,briefcase=Vector2.zero,['briefcase-02'
+]=Vector2.zero,browser=Vector2.zero,brush=Vector2.zero,['brush-02']=Vector2.zero
+,['brush-03']=Vector2.zero,building=Vector2.zero,['building-02']=Vector2.zero,[
+'building-03']=Vector2.zero,['building-04']=Vector2.zero,['building-05']=Vector2
+.zero,['building-06']=Vector2.zero,['building-07']=Vector2.zero,['building-08']=
+Vector2.zero,bus=Vector2.zero,calculator=Vector2.zero,calendar=Vector2.zero,[
+'calendar-check']=Vector2.zero,['calendar-check-02']=Vector2.zero,[
+'calendar-date']=Vector2.zero,['calendar-heart']=Vector2.zero,[
+'calendar-heart-02']=Vector2.zero,['calendar-minus']=Vector2.zero,[
+'calendar-minus-02']=Vector2.zero,['calendar-plus']=Vector2.zero,[
+'calendar-plus-02']=Vector2.zero,camera=Vector2.zero,['camera-02']=Vector2.zero,
+['camera-03']=Vector2.zero,['camera-lens']=Vector2.zero,['camera-off']=Vector2.
+zero,['camera-plus']=Vector2.zero,car=Vector2.zero,['car-02']=Vector2.zero,
+certificate=Vector2.zero,['certificate-02']=Vector2.zero,[
+'chart-breakout-circle']=Vector2.zero,['chart-breakout-square']=Vector2.zero,
+check=Vector2.zero,['check-circle']=Vector2.zero,['check-circle-broken']=Vector2
+.zero,['check-done']=Vector2.zero,['check-done-02']=Vector2.zero,['check-heart']
+=Vector2.zero,['check-square']=Vector2.zero,['check-square-broken']=Vector2.zero
+,['check-verified']=Vector2.zero,['check-verified-02']=Vector2.zero,[
+'check-verified-03']=Vector2.zero,['chevron-down']=Vector2.zero,[
+'chevron-down-double']=Vector2.zero,['chevron-left']=Vector2.zero,[
+'chevron-left-double']=Vector2.zero,['chevron-right']=Vector2.zero,[
+'chevron-right-double']=Vector2.zero,['chevron-selector-horizontal']=Vector2.
+zero,['chevron-selector-vertical']=Vector2.zero,['chevron-up']=Vector2.zero,[
+'chevron-up-double']=Vector2.zero,['chrome-cast']=Vector2.zero,circle=Vector2.
+zero,['circle-cut']=Vector2.zero,clapperboard=Vector2.zero,clipboard=Vector2.
+zero,['clipboard-attachment']=Vector2.zero,['clipboard-check']=Vector2.zero,[
+'clipboard-download']=Vector2.zero,['clipboard-minus']=Vector2.zero,[
+'clipboard-plus']=Vector2.zero,['clipboard-x']=Vector2.zero,clock=Vector2.zero,[
+'clock-check']=Vector2.zero,['clock-fast-forward']=Vector2.zero,['clock-plus']=
+Vector2.zero,['clock-refresh']=Vector2.zero,['clock-rewind']=Vector2.zero,[
+'clock-snooze']=Vector2.zero,['clock-stopwatch']=Vector2.zero,cloud=Vector2.zero
+,['cloud-02']=Vector2.zero,['cloud-03']=Vector2.zero,['cloud-blank']=Vector2.
+zero,['cloud-blank-02']=Vector2.zero,['cloud-lightning']=Vector2.zero,[
+'cloud-moon']=Vector2.zero,['cloud-off']=Vector2.zero,['cloud-raining']=Vector2.
+zero,['cloud-raining-02']=Vector2.zero,['cloud-raining-03']=Vector2.zero,[
+'cloud-raining-04']=Vector2.zero,['cloud-raining-05']=Vector2.zero,[
+'cloud-raining-06']=Vector2.zero,['cloud-snowing']=Vector2.zero,[
+'cloud-snowing-02']=Vector2.zero,['cloud-sun']=Vector2.zero,['cloud-sun-02']=
+Vector2.zero,['cloud-sun-03']=Vector2.zero,code=Vector2.zero,['code-02']=Vector2
+.zero,['code-browser']=Vector2.zero,['code-circle']=Vector2.zero,[
+'code-circle-02']=Vector2.zero,['code-circle-03']=Vector2.zero,['code-snippet']=
+Vector2.zero,['code-snippet-02']=Vector2.zero,['code-square']=Vector2.zero,[
+'code-square-02']=Vector2.zero,codepen=Vector2.zero,coins=Vector2.zero,[
+'coins-02']=Vector2.zero,['coins-03']=Vector2.zero,['coins-04']=Vector2.zero,[
+'coins-hand']=Vector2.zero,['coins-stacked']=Vector2.zero,['coins-stacked-02']=
+Vector2.zero,['coins-stacked-03']=Vector2.zero,['coins-stacked-04']=Vector2.zero
+,['coins-swap']=Vector2.zero,['coins-swap-02']=Vector2.zero,colors=Vector2.zero,
+columns=Vector2.zero,['columns-02']=Vector2.zero,['columns-03']=Vector2.zero,
+command=Vector2.zero,compass=Vector2.zero,['compass-02']=Vector2.zero,[
+'compass-03']=Vector2.zero,container=Vector2.zero,contrast=Vector2.zero,[
+'contrast-02']=Vector2.zero,['contrast-03']=Vector2.zero,copy=Vector2.zero,[
+'copy-02']=Vector2.zero,['copy-03']=Vector2.zero,['copy-04']=Vector2.zero,[
+'copy-05']=Vector2.zero,['copy-06']=Vector2.zero,['copy-07']=Vector2.zero,[
+'copy-dashed']=Vector2.zero,['corner-down-left']=Vector2.zero,[
+'corner-down-right']=Vector2.zero,['corner-left-down']=Vector2.zero,[
+'corner-left-up']=Vector2.zero,['corner-right-down']=Vector2.zero,[
+'corner-right-up']=Vector2.zero,['corner-up-left']=Vector2.zero,[
+'corner-up-right']=Vector2.zero,['cpu-chip']=Vector2.zero,['cpu-chip-02']=
+Vector2.zero,['credit-card']=Vector2.zero,['credit-card-02']=Vector2.zero,[
+'credit-card-check']=Vector2.zero,['credit-card-down']=Vector2.zero,[
+'credit-card-download']=Vector2.zero,['credit-card-edit']=Vector2.zero,[
+'credit-card-lock']=Vector2.zero,['credit-card-minus']=Vector2.zero,[
+'credit-card-plus']=Vector2.zero,['credit-card-refresh']=Vector2.zero,[
+'credit-card-search']=Vector2.zero,['credit-card-shield']=Vector2.zero,[
+'credit-card-up']=Vector2.zero,['credit-card-upload']=Vector2.zero,[
+'credit-card-x']=Vector2.zero,crop=Vector2.zero,['crop-02']=Vector2.zero,
+cryptocurrency=Vector2.zero,['cryptocurrency-02']=Vector2.zero,[
+'cryptocurrency-03']=Vector2.zero,['cryptocurrency-04']=Vector2.zero,cube=
+Vector2.zero,['cube-02']=Vector2.zero,['cube-03']=Vector2.zero,['cube-04']=
+Vector2.zero,['cube-outline']=Vector2.zero,['currency-bitcoin']=Vector2.zero,[
+'currency-bitcoin-circle']=Vector2.zero,['currency-dollar']=Vector2.zero,[
+'currency-dollar-circle']=Vector2.zero,['currency-ethereum']=Vector2.zero,[
+'currency-ethereum-circle']=Vector2.zero,['currency-euro']=Vector2.zero,[
+'currency-euro-circle']=Vector2.zero,['currency-pound']=Vector2.zero,[
+'currency-pound-circle']=Vector2.zero,['currency-ruble']=Vector2.zero,[
+'currency-ruble-circle']=Vector2.zero,['currency-rupee']=Vector2.zero,[
+'currency-rupee-circle']=Vector2.zero,['currency-yen']=Vector2.zero,[
+'currency-yen-circle']=Vector2.zero,cursor=Vector2.zero,['cursor-02']=Vector2.
+zero,['cursor-03']=Vector2.zero,['cursor-04']=Vector2.zero,['cursor-box']=
+Vector2.zero,['cursor-click']=Vector2.zero,['cursor-click-02']=Vector2.zero,data
+=Vector2.zero,database=Vector2.zero,['database-02']=Vector2.zero,['database-03']
+=Vector2.zero,dataflow=Vector2.zero,['dataflow-02']=Vector2.zero,['dataflow-03']
+=Vector2.zero,['dataflow-04']=Vector2.zero,delete=Vector2.zero,diamond=Vector2.
+zero,['diamond-02']=Vector2.zero,dice=Vector2.zero,['dice-2']=Vector2.zero,[
+'dice-3']=Vector2.zero,['dice-4']=Vector2.zero,['dice-5']=Vector2.zero,['dice-6'
+]=Vector2.zero,disc=Vector2.zero,['disc-02']=Vector2.zero,[
+'distribute-spacing-horizontal']=Vector2.zero,['distribute-spacing-vertical']=
+Vector2.zero,divide=Vector2.zero,['divide-02']=Vector2.zero,['divide-03']=
+Vector2.zero,['divide-circle']=Vector2.zero,divider=Vector2.zero,dotpoints=
+Vector2.zero,['dotpoints-02']=Vector2.zero,['dots-grid']=Vector2.zero,[
+'dots-horizontal']=Vector2.zero,['dots-vertical']=Vector2.zero,download=Vector2.
+zero,['download-02']=Vector2.zero,['download-03']=Vector2.zero,['download-04']=
+Vector2.zero,['download-circle']=Vector2.zero,['download-cloud-01']=Vector2.zero
+,['download-cloud-02']=Vector2.zero,['download-line']=Vector2.zero,drop=Vector2.
+zero,droplets=Vector2.zero,['droplets-02']=Vector2.zero,['droplets-03']=Vector2.
+zero,dropper=Vector2.zero,['edit-01']=Vector2.zero,['edit-02']=Vector2.zero,[
+'edit-03']=Vector2.zero,['edit-04']=Vector2.zero,['edit-05']=Vector2.zero,equal=
+Vector2.zero,['equal-not']=Vector2.zero,eraser=Vector2.zero,expand=Vector2.zero,
+['expand-02']=Vector2.zero,['expand-03']=Vector2.zero,['expand-04']=Vector2.zero
+,['expand-05']=Vector2.zero,['expand-06']=Vector2.zero,['expand-lg']=Vector2.
+zero,eye=Vector2.zero,['eye-off']=Vector2.zero,['face-content']=Vector2.zero,[
+'face-frown']=Vector2.zero,['face-happy']=Vector2.zero,['face-id']=Vector2.zero,
+['face-id-square']=Vector2.zero,['face-neutral']=Vector2.zero,['face-sad']=
+Vector2.zero,['face-smile']=Vector2.zero,['face-wink']=Vector2.zero,[
+'fast-backward']=Vector2.zero,['fast-forward']=Vector2.zero,feather=Vector2.zero
+,figma=Vector2.zero,file=Vector2.zero,['file-02']=Vector2.zero,['file-03']=
+Vector2.zero,['file-04']=Vector2.zero,['file-05']=Vector2.zero,['file-06']=
+Vector2.zero,['file-07']=Vector2.zero,['file-attachment']=Vector2.zero,[
+'file-attachment-02']=Vector2.zero,['file-attachment-03']=Vector2.zero,[
+'file-attachment-04']=Vector2.zero,['file-attachment-05']=Vector2.zero,[
+'file-check']=Vector2.zero,['file-check-02']=Vector2.zero,['file-check-03']=
+Vector2.zero,['file-code']=Vector2.zero,['file-code-02']=Vector2.zero,[
+'file-download']=Vector2.zero,['file-download-02']=Vector2.zero,[
+'file-download-03']=Vector2.zero,['file-heart']=Vector2.zero,['file-heart-02']=
+Vector2.zero,['file-heart-03']=Vector2.zero,['file-lock']=Vector2.zero,[
+'file-lock-02']=Vector2.zero,['file-lock-03']=Vector2.zero,['file-minus']=
+Vector2.zero,['file-minus-02']=Vector2.zero,['file-minus-03']=Vector2.zero,[
+'file-plus']=Vector2.zero,['file-plus-02']=Vector2.zero,['file-plus-03']=Vector2
+.zero,['file-question']=Vector2.zero,['file-question-02']=Vector2.zero,[
+'file-question-03']=Vector2.zero,['file-search']=Vector2.zero,['file-search-02']
+=Vector2.zero,['file-search-03']=Vector2.zero,['file-shield']=Vector2.zero,[
+'file-shield-02']=Vector2.zero,['file-shield-03']=Vector2.zero,['file-x']=
+Vector2.zero,['file-x-02']=Vector2.zero,['file-x-03']=Vector2.zero,film=Vector2.
+zero,['film-02']=Vector2.zero,['film-03']=Vector2.zero,['filter-funnel']=Vector2
+.zero,['filter-funnel-02']=Vector2.zero,['filter-lines']=Vector2.zero,
+fingerprint=Vector2.zero,['fingerprint-02']=Vector2.zero,['fingerprint-03']=
+Vector2.zero,['fingerprint-04']=Vector2.zero,flag=Vector2.zero,['flag-02']=
+Vector2.zero,['flag-03']=Vector2.zero,['flag-04']=Vector2.zero,['flag-05']=
+Vector2.zero,['flag-06']=Vector2.zero,flash=Vector2.zero,['flash-off']=Vector2.
+zero,['flex-align-bottom']=Vector2.zero,['flex-align-left']=Vector2.zero,[
+'flex-align-right']=Vector2.zero,['flex-align-top']=Vector2.zero,[
+'flip-backward']=Vector2.zero,['flip-forward']=Vector2.zero,folder=Vector2.zero,
+['folder-check']=Vector2.zero,['folder-closed']=Vector2.zero,['folder-code']=
+Vector2.zero,['folder-download']=Vector2.zero,['folder-lock']=Vector2.zero,[
+'folder-minus']=Vector2.zero,['folder-plus']=Vector2.zero,['folder-question']=
+Vector2.zero,['folder-search']=Vector2.zero,['folder-shield']=Vector2.zero,[
+'folder-x']=Vector2.zero,framer=Vector2.zero,['gaming-pad']=Vector2.zero,[
+'gaming-pad-02']=Vector2.zero,gift=Vector2.zero,['gift-02']=Vector2.zero,[
+'git-branch']=Vector2.zero,['git-branch-02']=Vector2.zero,['git-commit']=Vector2
+.zero,['git-merge']=Vector2.zero,['git-pull-request']=Vector2.zero,glasses=
+Vector2.zero,['glasses-02']=Vector2.zero,globe=Vector2.zero,['globe-02']=Vector2
+.zero,['globe-03']=Vector2.zero,['globe-04']=Vector2.zero,['globe-05']=Vector2.
+zero,['globe-06']=Vector2.zero,['globe-slated']=Vector2.zero,['globe-slated-02']
+=Vector2.zero,['google-chrome']=Vector2.zero,['graduation-hat']=Vector2.zero,[
+'graduation-hat-02']=Vector2.zero,grid=Vector2.zero,['grid-02']=Vector2.zero,[
+'grid-03']=Vector2.zero,['grid-dots-blank']=Vector2.zero,['grid-dots-bottom']=
+Vector2.zero,['grid-dots-horizontal-center']=Vector2.zero,['grid-dots-left']=
+Vector2.zero,['grid-dots-outer']=Vector2.zero,['grid-dots-right']=Vector2.zero,[
+'grid-dots-top']=Vector2.zero,['grid-dots-vertical-center']=Vector2.zero,hand=
+Vector2.zero,['hard-drive']=Vector2.zero,hash=Vector2.zero,['hash-02']=Vector2.
+zero,['hash-italic']=Vector2.zero,heading=Vector2.zero,['heading-02']=Vector2.
+zero,['heading-square']=Vector2.zero,headphones=Vector2.zero,['headphones-02']=
+Vector2.zero,heart=Vector2.zero,['heart-circle']=Vector2.zero,['heart-hand']=
+Vector2.zero,['heart-hexagon']=Vector2.zero,['heart-octagon']=Vector2.zero,[
+'heart-rounded']=Vector2.zero,['heart-square']=Vector2.zero,hearts=Vector2.zero,
+['help-circle']=Vector2.zero,['help-hexagon']=Vector2.zero,['help-octagon']=
+Vector2.zero,['help-square']=Vector2.zero,hexagon=Vector2.zero,['hexagon-02']=
+Vector2.zero,home=Vector2.zero,['home-02']=Vector2.zero,['home-03']=Vector2.zero
+,['home-04']=Vector2.zero,['home-05']=Vector2.zero,['home-line']=Vector2.zero,[
+'home-smile']=Vector2.zero,['horizontal-bar-chart']=Vector2.zero,[
+'horizontal-bar-chart-02']=Vector2.zero,['horizontal-bar-chart-03']=Vector2.zero
+,hourglass=Vector2.zero,['hourglass-02']=Vector2.zero,['hourglass-03']=Vector2.
+zero,hurricane=Vector2.zero,['hurricane-02']=Vector2.zero,['hurricane-03']=
+Vector2.zero,image=Vector2.zero,['image-02']=Vector2.zero,['image-03']=Vector2.
+zero,['image-04']=Vector2.zero,['image-05']=Vector2.zero,['image-check']=Vector2
+.zero,['image-circle']=Vector2.zero,['image-down']=Vector2.zero,[
+'image-indent-left']=Vector2.zero,['image-indent-right']=Vector2.zero,[
+'image-left']=Vector2.zero,['image-plus']=Vector2.zero,['image-right']=Vector2.
+zero,['image-up']=Vector2.zero,['image-user']=Vector2.zero,['image-user-check']=
+Vector2.zero,['image-user-down']=Vector2.zero,['image-user-left']=Vector2.zero,[
+'image-user-plus']=Vector2.zero,['image-user-right']=Vector2.zero,[
+'image-user-up']=Vector2.zero,['image-user-x']=Vector2.zero,['image-x']=Vector2.
+zero,inbox=Vector2.zero,['inbox-02']=Vector2.zero,infinity=Vector2.zero,[
+'info-circle']=Vector2.zero,['info-hexagon']=Vector2.zero,['info-octagon']=
+Vector2.zero,['info-square']=Vector2.zero,['intersect-circle']=Vector2.zero,[
+'intersect-square']=Vector2.zero,iphone=Vector2.zero,italic=Vector2.zero,[
+'italic-02']=Vector2.zero,['italic-square']=Vector2.zero,key=Vector2.zero,[
+'key-02']=Vector2.zero,keyboard=Vector2.zero,['keyboard-02']=Vector2.zero,laptop
+=Vector2.zero,['laptop-02']=Vector2.zero,['layer-single']=Vector2.zero,[
+'layers-three']=Vector2.zero,['layers-three-02']=Vector2.zero,['layers-two']=
+Vector2.zero,['layers-two-02']=Vector2.zero,['layout-alt']=Vector2.zero,[
+'layout-alt-02']=Vector2.zero,['layout-alt-03']=Vector2.zero,['layout-alt-04']=
+Vector2.zero,['layout-bottom']=Vector2.zero,['layout-grid']=Vector2.zero,[
+'layout-grid-02']=Vector2.zero,['layout-left']=Vector2.zero,['layout-right']=
+Vector2.zero,['layout-top']=Vector2.zero,['left-indent']=Vector2.zero,[
+'left-indent-02']=Vector2.zero,['letter-spacing']=Vector2.zero,[
+'letter-spacing-02']=Vector2.zero,['life-buoy']=Vector2.zero,['life-buoy-02']=
+Vector2.zero,lightbulb=Vector2.zero,['lightbulb-02']=Vector2.zero,[
+'lightbulb-03']=Vector2.zero,['lightbulb-04']=Vector2.zero,['lightbulb-05']=
+Vector2.zero,lightning=Vector2.zero,['lightning-02']=Vector2.zero,[
+'line-chart-down']=Vector2.zero,['line-chart-down-02']=Vector2.zero,[
+'line-chart-down-03']=Vector2.zero,['line-chart-down-04']=Vector2.zero,[
+'line-chart-down-05']=Vector2.zero,['line-chart-up']=Vector2.zero,[
+'line-chart-up-02']=Vector2.zero,['line-chart-up-03']=Vector2.zero,[
+'line-chart-up-04']=Vector2.zero,['line-chart-up-05']=Vector2.zero,[
+'line-height']=Vector2.zero,link=Vector2.zero,['link-02']=Vector2.zero,[
+'link-03']=Vector2.zero,['link-04']=Vector2.zero,['link-05']=Vector2.zero,[
+'link-broken']=Vector2.zero,['link-broken-02']=Vector2.zero,['link-external-01']
+=Vector2.zero,['link-external-02']=Vector2.zero,list=Vector2.zero,['loading-01']
+=Vector2.zero,['loading-02']=Vector2.zero,['loading-03']=Vector2.zero,lock=
+Vector2.zero,['lock-02']=Vector2.zero,['lock-03']=Vector2.zero,['lock-04']=
+Vector2.zero,['lock-keyhole-circle']=Vector2.zero,['lock-keyhole-square']=
+Vector2.zero,['lock-unlocked']=Vector2.zero,['lock-unlocked-02']=Vector2.zero,[
+'lock-unlocked-03']=Vector2.zero,['lock-unlocked-04']=Vector2.zero,['log-in']=
+Vector2.zero,['log-in-02']=Vector2.zero,['log-in-03']=Vector2.zero,['log-in-04']
+=Vector2.zero,['log-out']=Vector2.zero,['log-out-02']=Vector2.zero,['log-out-03'
+]=Vector2.zero,['log-out-04']=Vector2.zero,['log-out-rounded']=Vector2.zero,
+luggage=Vector2.zero,['luggage-02']=Vector2.zero,['luggage-03']=Vector2.zero,[
+'magic-wand']=Vector2.zero,['magic-wand-02']=Vector2.zero,mail=Vector2.zero,[
+'mail-02']=Vector2.zero,['mail-03']=Vector2.zero,['mail-04']=Vector2.zero,[
+'mail-05']=Vector2.zero,['mail-open']=Vector2.zero,['mail-open-02']=Vector2.zero
+,map=Vector2.zero,['map-02']=Vector2.zero,mark=Vector2.zero,['marker-pin']=
+Vector2.zero,['marker-pin-02']=Vector2.zero,['marker-pin-03']=Vector2.zero,[
+'marker-pin-04']=Vector2.zero,['marker-pin-05']=Vector2.zero,['marker-pin-06']=
+Vector2.zero,['marker-pin-flag']=Vector2.zero,maximize=Vector2.zero,[
+'maximize-02']=Vector2.zero,['medical-circle']=Vector2.zero,['medical-cross']=
+Vector2.zero,['medical-square']=Vector2.zero,menu=Vector2.zero,['menu-02']=
+Vector2.zero,['menu-03']=Vector2.zero,['menu-04']=Vector2.zero,['menu-05']=
+Vector2.zero,['message-alert-circle']=Vector2.zero,['message-alert-square']=
+Vector2.zero,['message-chat-circle']=Vector2.zero,['message-chat-square']=
+Vector2.zero,['message-check-circle']=Vector2.zero,['message-check-square']=
+Vector2.zero,['message-circle']=Vector2.zero,['message-circle-02']=Vector2.zero,
+['message-dots-circle']=Vector2.zero,['message-dots-square']=Vector2.zero,[
+'message-heart-circle']=Vector2.zero,['message-heart-square']=Vector2.zero,[
+'message-notification-circle']=Vector2.zero,['message-notification-square']=
+Vector2.zero,['message-plus-circle']=Vector2.zero,['message-plus-square']=
+Vector2.zero,['message-question-circle']=Vector2.zero,['message-question-square'
+]=Vector2.zero,['message-smile-circle']=Vector2.zero,['message-smile-square']=
+Vector2.zero,['message-square']=Vector2.zero,['message-square-02']=Vector2.zero,
+['message-text-circle']=Vector2.zero,['message-text-circle-02']=Vector2.zero,[
+'message-text-square']=Vector2.zero,['message-text-square-02']=Vector2.zero,[
+'message-x-circle']=Vector2.zero,['message-x-square']=Vector2.zero,microphone=
+Vector2.zero,['microphone-02']=Vector2.zero,['microphone-off']=Vector2.zero,[
+'microphone-off-02']=Vector2.zero,microscope=Vector2.zero,minimize=Vector2.zero,
+['minimize-02']=Vector2.zero,minus=Vector2.zero,['minus-circle']=Vector2.zero,[
+'minus-square']=Vector2.zero,mobile=Vector2.zero,modem=Vector2.zero,['modem-02']
+=Vector2.zero,monitor=Vector2.zero,['monitor-02']=Vector2.zero,['monitor-03']=
+Vector2.zero,['monitor-04']=Vector2.zero,['monitor-05']=Vector2.zero,moon=
+Vector2.zero,['moon-02']=Vector2.zero,['moon-eclipse']=Vector2.zero,['moon-star'
+]=Vector2.zero,mouse=Vector2.zero,move=Vector2.zero,['music-note']=Vector2.zero,
+['music-note-02']=Vector2.zero,['music-note-plus']=Vector2.zero,[
+'navigation-pointer']=Vector2.zero,['navigation-pointer-02']=Vector2.zero,[
+'navigation-pointer-off']=Vector2.zero,['navigation-pointer-off-02']=Vector2.
+zero,['notification-box']=Vector2.zero,['notification-message']=Vector2.zero,[
+'notification-text']=Vector2.zero,octagon=Vector2.zero,package=Vector2.zero,[
+'package-check']=Vector2.zero,['package-minus']=Vector2.zero,['package-plus']=
+Vector2.zero,['package-search']=Vector2.zero,['package-x']=Vector2.zero,paint=
+Vector2.zero,['paint-pour']=Vector2.zero,palette=Vector2.zero,paperclip=Vector2.
+zero,['paragraph-spacing']=Vector2.zero,['paragraph-wrap']=Vector2.zero,passcode
+=Vector2.zero,['passcode-lock']=Vector2.zero,passport=Vector2.zero,[
+'pause-circle']=Vector2.zero,['pause-square']=Vector2.zero,['pen-tool']=Vector2.
+zero,['pen-tool-02']=Vector2.zero,['pen-tool-minus']=Vector2.zero,[
+'pen-tool-plus']=Vector2.zero,pencil=Vector2.zero,['pencil-02']=Vector2.zero,[
+'pencil-line']=Vector2.zero,pentagon=Vector2.zero,percent=Vector2.zero,[
+'percent-02']=Vector2.zero,['percent-03']=Vector2.zero,['percent-circle']=
+Vector2.zero,perspective=Vector2.zero,['perspective-02']=Vector2.zero,phone=
+Vector2.zero,['phone-02']=Vector2.zero,['phone-call']=Vector2.zero,[
+'phone-call-02']=Vector2.zero,['phone-hang-up']=Vector2.zero,['phone-incoming']=
+Vector2.zero,['phone-incoming-02']=Vector2.zero,['phone-outgoing']=Vector2.zero,
+['phone-outgoing-02']=Vector2.zero,['phone-pause']=Vector2.zero,['phone-plus']=
+Vector2.zero,['phone-x']=Vector2.zero,['pie-chart']=Vector2.zero,['pie-chart-02'
+]=Vector2.zero,['pie-chart-03']=Vector2.zero,['pie-chart-04']=Vector2.zero,[
+'piggy-bank']=Vector2.zero,['piggy-bank-02']=Vector2.zero,pilcrow=Vector2.zero,[
+'pilcrow-02']=Vector2.zero,['pilcrow-square']=Vector2.zero,pin=Vector2.zero,[
+'pin-02']=Vector2.zero,['pin-italic']=Vector2.zero,placeholder=Vector2.zero,
+plane=Vector2.zero,play=Vector2.zero,['play-circle']=Vector2.zero,['play-square'
+]=Vector2.zero,plus=Vector2.zero,['plus-circle']=Vector2.zero,['plus-square']=
+Vector2.zero,podcast=Vector2.zero,power=Vector2.zero,['power-02']=Vector2.zero,[
+'power-03']=Vector2.zero,['presentation-chart']=Vector2.zero,[
+'presentation-chart-02']=Vector2.zero,['presentation-chart-03']=Vector2.zero,
+printer=Vector2.zero,['puzzle-piece']=Vector2.zero,['puzzle-piece-02']=Vector2.
+zero,['qr-code']=Vector2.zero,['qr-code-02']=Vector2.zero,receipt=Vector2.zero,[
+'receipt-check']=Vector2.zero,recording=Vector2.zero,['recording-02']=Vector2.
+zero,['recording-03']=Vector2.zero,reflect=Vector2.zero,['reflect-02']=Vector2.
+zero,['refresh-ccw']=Vector2.zero,['refresh-ccw-02']=Vector2.zero,[
+'refresh-ccw-03']=Vector2.zero,['refresh-ccw-04']=Vector2.zero,['refresh-ccw-05'
+]=Vector2.zero,['refresh-ccw-double']=Vector2.zero,['refresh-ccw-vertical']=
+Vector2.zero,['refresh-ccw-vertical-md']=Vector2.zero,['refresh-ccw-vertical-sm'
+]=Vector2.zero,['refresh-cw-02']=Vector2.zero,['refresh-cw-03']=Vector2.zero,[
+'refresh-cw-04']=Vector2.zero,['refresh-cw-05']=Vector2.zero,['refresh-cw-right'
+]=Vector2.zero,['repeat']=Vector2.zero,['repeat-02']=Vector2.zero,['repeat-03']=
+Vector2.zero,['repeat-04']=Vector2.zero,['reverse-left']=Vector2.zero,[
+'reverse-right']=Vector2.zero,['right-indent']=Vector2.zero,['right-indent-02']=
+Vector2.zero,rocket=Vector2.zero,['rocket-02']=Vector2.zero,['roller-brush']=
+Vector2.zero,route=Vector2.zero,rows=Vector2.zero,['rows-02']=Vector2.zero,[
+'rows-03']=Vector2.zero,rss=Vector2.zero,['rss-02']=Vector2.zero,ruler=Vector2.
+zero,safe=Vector2.zero,sale=Vector2.zero,['sale-02']=Vector2.zero,['sale-03']=
+Vector2.zero,['sale-04']=Vector2.zero,save=Vector2.zero,['save-02']=Vector2.zero
+,['save-03']=Vector2.zero,['save-double']=Vector2.zero,scale=Vector2.zero,[
+'scale-02']=Vector2.zero,['scale-03']=Vector2.zero,scales=Vector2.zero,[
+'scales-02']=Vector2.zero,scan=Vector2.zero,['school-compass']=Vector2.zero,
+scissors=Vector2.zero,['scissors-02']=Vector2.zero,['scissors-cut']=Vector2.zero
+,['scissors-cut-02']=Vector2.zero,['search-lg']=Vector2.zero,['search-md']=
+Vector2.zero,['search-refraction']=Vector2.zero,['search-sm']=Vector2.zero,send=
+Vector2.zero,['send-02']=Vector2.zero,['send-03']=Vector2.zero,[
+'send-horizontal']=Vector2.zero,['send-vertical']=Vector2.zero,server=Vector2.
+zero,['server-02']=Vector2.zero,['server-03']=Vector2.zero,['server-04']=Vector2
+.zero,['server-05']=Vector2.zero,['server-06']=Vector2.zero,settings=Vector2.
+zero,['settings-02']=Vector2.zero,['settings-03']=Vector2.zero,['settings-04']=
+Vector2.zero,['settings-toggle']=Vector2.zero,['settings-toggle-line']=Vector2.
+zero,share=Vector2.zero,['share-02']=Vector2.zero,['share-03']=Vector2.zero,[
+'share-04']=Vector2.zero,['share-05']=Vector2.zero,['share-06']=Vector2.zero,[
+'share-07']=Vector2.zero,shield=Vector2.zero,['shield-02']=Vector2.zero,[
+'shield-03']=Vector2.zero,['shield-dollar']=Vector2.zero,['shield-off']=Vector2.
+zero,['shield-plus']=Vector2.zero,['shield-separator']=Vector2.zero,[
+'shield-tick']=Vector2.zero,['shield-zap']=Vector2.zero,shop=Vector2.zero,[
+'shopping-bag']=Vector2.zero,['shopping-bag-02']=Vector2.zero,['shopping-bag-03'
+]=Vector2.zero,['shopping-cart']=Vector2.zero,['shopping-cart-02']=Vector2.zero,
+['shopping-cart-03']=Vector2.zero,shuffle=Vector2.zero,['shuffle-02']=Vector2.
+zero,signal=Vector2.zero,['signal-02']=Vector2.zero,['signal-03']=Vector2.zero,
+simcard=Vector2.zero,skew=Vector2.zero,['skip-back']=Vector2.zero,[
+'skip-forward']=Vector2.zero,['slash-circle-01']=Vector2.zero,['slash-circle-02'
+]=Vector2.zero,['slash-divider']=Vector2.zero,['slash-octagon']=Vector2.zero,
+sliders=Vector2.zero,['sliders-02']=Vector2.zero,['sliders-03']=Vector2.zero,[
+'sliders-04']=Vector2.zero,snowflake=Vector2.zero,['snowflake-02']=Vector2.zero,
+['spacing-height']=Vector2.zero,['spacing-height-02']=Vector2.zero,[
+'spacing-width']=Vector2.zero,['spacing-width-02']=Vector2.zero,speaker=Vector2.
+zero,['speaker-02']=Vector2.zero,['speaker-03']=Vector2.zero,speedometer=Vector2
+.zero,['speedometer-02']=Vector2.zero,['speedometer-03']=Vector2.zero,[
+'speedometer-04']=Vector2.zero,square=Vector2.zero,stand=Vector2.zero,star=
+Vector2.zero,['star-02']=Vector2.zero,['star-03']=Vector2.zero,['star-04']=
+Vector2.zero,['star-05']=Vector2.zero,['star-06']=Vector2.zero,['star-07']=
+Vector2.zero,stars=Vector2.zero,['stars-02']=Vector2.zero,['stars-03']=Vector2.
+zero,['sticker-circle']=Vector2.zero,['sticker-square']=Vector2.zero,stop=
+Vector2.zero,['stop-circle']=Vector2.zero,['stop-square']=Vector2.zero,
+strikethrough=Vector2.zero,['strikethrough-02']=Vector2.zero,[
+'strikethrough-square']=Vector2.zero,subscript=Vector2.zero,sun=Vector2.zero,[
+'sun-setting']=Vector2.zero,['sun-setting-02']=Vector2.zero,['sun-setting-03']=
+Vector2.zero,sunrise=Vector2.zero,sunset=Vector2.zero,['switch-horizontal']=
+Vector2.zero,['switch-horizontal-02']=Vector2.zero,['switch-horizontal-sm']=
+Vector2.zero,['switch-vertical']=Vector2.zero,['switch-vertical-02']=Vector2.
+zero,['switch-vertical-sm']=Vector2.zero,table=Vector2.zero,tablet=Vector2.zero,
+['tablet-02']=Vector2.zero,tag=Vector2.zero,['tag-02']=Vector2.zero,['tag-03']=
+Vector2.zero,target=Vector2.zero,['target-02']=Vector2.zero,['target-03']=
+Vector2.zero,['target-04']=Vector2.zero,['target-05']=Vector2.zero,[
+'target-arrow']=Vector2.zero,telescope=Vector2.zero,terminal=Vector2.zero,[
+'terminal-browser']=Vector2.zero,['terminal-circle']=Vector2.zero,[
+'terminal-square']=Vector2.zero,['text-align-left']=Vector2.zero,[
+'text-align-right']=Vector2.zero,['text-input']=Vector2.zero,thermometer=Vector2
+.zero,['thermometer-02']=Vector2.zero,['thermometer-03']=Vector2.zero,[
+'thermometer-cold']=Vector2.zero,['thermometer-warm']=Vector2.zero,[
+'thumbs-down']=Vector2.zero,['thumbs-up']=Vector2.zero,ticket=Vector2.zero,[
+'ticket-02']=Vector2.zero,['toggle-01-left']=Vector2.zero,['toggle-01-right']=
+Vector2.zero,['toggle-02-left']=Vector2.zero,['toggle-02-right']=Vector2.zero,[
+'toggle-03-left']=Vector2.zero,['toggle-03-right']=Vector2.zero,['toggle-left']=
+Vector2.zero,['toggle-right']=Vector2.zero,['toggle-rounded-left']=Vector2.zero,
+['toggle-rounded-right']=Vector2.zero,tool=Vector2.zero,['tool-02']=Vector2.zero
+,train=Vector2.zero,tram=Vector2.zero,transform=Vector2.zero,translate=Vector2.
+zero,['translate-02']=Vector2.zero,trash=Vector2.zero,['trash-02']=Vector2.zero,
+['trash-03']=Vector2.zero,['trash-04']=Vector2.zero,['trend-down']=Vector2.zero,
+['trend-down-02']=Vector2.zero,['trend-up']=Vector2.zero,['trend-up-02']=Vector2
+.zero,triangle=Vector2.zero,trophy=Vector2.zero,['trophy-02']=Vector2.zero,truck
+=Vector2.zero,['truck-02']=Vector2.zero,tv=Vector2.zero,['tv-02']=Vector2.zero,[
+'tv-03']=Vector2.zero,type=Vector2.zero,['type-02']=Vector2.zero,['type-square']
+=Vector2.zero,['type-strikethrough']=Vector2.zero,['type-strikethrough-02']=
+Vector2.zero,umbrella=Vector2.zero,['umbrella-02']=Vector2.zero,['umbrella-03']=
+Vector2.zero,underline=Vector2.zero,['underline-02']=Vector2.zero,[
+'underline-square']=Vector2.zero,upload=Vector2.zero,['upload-02']=Vector2.zero,
+['upload-03']=Vector2.zero,['upload-04']=Vector2.zero,['upload-circle']=Vector2.
+zero,['upload-circle-broken']=Vector2.zero,['upload-cloud']=Vector2.zero,[
+'upload-cloud-02']=Vector2.zero,['usb-flash-drive']=Vector2.zero,user=Vector2.
+zero,['user-02']=Vector2.zero,['user-03']=Vector2.zero,['user-check']=Vector2.
+zero,['user-check-02']=Vector2.zero,['user-circle']=Vector2.zero,['user-down']=
+Vector2.zero,['user-down-02']=Vector2.zero,['user-edit']=Vector2.zero,[
+'user-left']=Vector2.zero,['user-left-02']=Vector2.zero,['user-minus']=Vector2.
+zero,['user-minus-02']=Vector2.zero,['user-plus']=Vector2.zero,['user-plus-02']=
+Vector2.zero,['user-right']=Vector2.zero,['user-right-02']=Vector2.zero,[
+'user-square']=Vector2.zero,['user-up']=Vector2.zero,['user-up-02']=Vector2.zero
+,['user-x']=Vector2.zero,['user-x-02']=Vector2.zero,users=Vector2.zero,[
+'users-02']=Vector2.zero,['users-03']=Vector2.zero,['users-check']=Vector2.zero,
+['users-down']=Vector2.zero,['users-edit']=Vector2.zero,['users-left']=Vector2.
+zero,['users-minus']=Vector2.zero,['users-plus']=Vector2.zero,['users-right']=
+Vector2.zero,['users-up']=Vector2.zero,['users-x']=Vector2.zero,variable=Vector2
+.zero,['video-recorder']=Vector2.zero,['video-recorder-off']=Vector2.zero,virus=
+Vector2.zero,voicemail=Vector2.zero,['volume-max']=Vector2.zero,['volume-min']=
+Vector2.zero,['volume-minus']=Vector2.zero,['volume-plus']=Vector2.zero,[
+'volume-x']=Vector2.zero,wallet=Vector2.zero,['wallet-02']=Vector2.zero,[
+'wallet-03']=Vector2.zero,['wallet-04']=Vector2.zero,['wallet-05']=Vector2.zero,
+['watch-circle']=Vector2.zero,['watch-square']=Vector2.zero,waves=Vector2.zero,
+webcam=Vector2.zero,['webcam-02']=Vector2.zero,['wifi-off']=Vector2.zero}}end
+function a.E()local b,c={untitled=a.load'D'},function(b,c,d,e,f,g)for h,i in b
+do h=h-1 c[i]={image=d,size=e,position=Vector2.new((h%g)*f,math.floor((h/g))*f)}
+end end for d,e in b do e.image='rbxassetid://'..e.image local f,g,h=e.size,e.
+icons,{}for i,j in g do table.insert(h,i)end table.sort(h)local i=e.columns if
+not i then local j=0 for k,l in g do j=j+1 end i=math.ceil(math.sqrt(j))end
+local j=Vector2.new(f,f)c(h,g,e.image,j,f,i)end return b end function a.F()local
+b=a.load'x'local c,d=b.create,{['semi-bold']=Enum.FontWeight.SemiBold,bold=Enum.
+FontWeight.Bold}return function(e)local f=e.fontWeight return c'TextLabel'{Name=
+'Label',BackgroundTransparency=1,ClipsDescendants=true,FontFace=Font.new(
+'rbxasset://fonts/families/Ubuntu.json',(f and{(d[f])}or{(Enum.FontWeight.
+Regular)})[1]),AutomaticSize=Enum.AutomaticSize.X,Size=UDim2.new(0,0,0,20),Text=
+e.content,TextColor3=e.color or Color3.fromRGB(161,161,161),TextSize=e.size or
+10,TextXAlignment=Enum.TextXAlignment.Left,LayoutOrder=e.layoutOrder or 0,c
+'UIPadding'{PaddingLeft=UDim.new(0,e.paddingLeft or 0),PaddingRight=UDim.new(0,e
+.paddingRight or 0)}}end end function a.G()local b=a.load'x'local c,d,e,f,g,h,i=
+b.derive,b.source,b.create,b.indexes,a.load'E',a.load'F',a.load'A'local j=
+function(j)local k,l,m=j.icon,j.isOpened,d(j.sections)local n,o=e
+'ScrollingFrame'{Name='Container',AutomaticCanvasSize=Enum.AutomaticSize.Y,
+BackgroundTransparency=1,ClipsDescendants=true,LayoutOrder=2,ScrollBarThickness=
+0,Selectable=false,Size=UDim2.fromScale(1,1),Visible=l,e'UIListLayout'{Padding=
+UDim.new(0,6),Name='UIListLayout',SortOrder=Enum.SortOrder.LayoutOrder,
+HorizontalFlex=Enum.UIFlexAlignment.Fill,FillDirection=Enum.FillDirection.
+Horizontal,Wraps=true},e'UIPadding'{Name='UIPadding',PaddingLeft=UDim.new(0,6),
+PaddingTop=UDim.new(0,4),PaddingRight=UDim.new(0,6)},f(m,function(n,o)local p=e
+'Frame'{Name='Section',BackgroundTransparency=1,AutomaticSize=Enum.AutomaticSize
+.Y,Size=UDim2.new(0,200,0,0),e'UIListLayout'{Name='UIListLayout',Padding=UDim.
+new(0,0),SortOrder=Enum.SortOrder.LayoutOrder,HorizontalFlex=Enum.
+UIFlexAlignment.Fill,FillDirection=Enum.FillDirection.Horizontal,Wraps=true},(o>
+1 and{(i{mode=d'horizontal'})}or{nil})[1],h{content=n().name,color=Color3.
+fromHSV(0,0,0.8),size=10},unpack(n().content)}return{p}end)},e'ImageButton'{Name
+='Category',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),Activated=
+function()l(not l())end,e'UICorner'{Name='UICorner',CornerRadius=UDim.new(0,6)},
+e'ImageLabel'{Name='Icon',Active=true,AnchorPoint=Vector2.new(0.5,0.5),
+BackgroundTransparency=1,Image=k.image,ImageRectOffset=k.position,ImageRectSize=
+k.size,ImageTransparency=c(function()return l()and 0 or 0.5 end),Position=UDim2.
+fromScale(0.5,0.5),Selectable=true,Size=UDim2.fromOffset(15,15)},e
+'UIAspectRatioConstraint'{Name='UIAspectRatioConstraint'}}return o,n end return
+j end function a.H()local b,c=game:GetService'RunService',{}function c.
+TweenPartCFrame(d,e,f,g,h)g=g or 1 local i=e and e:IsA'BasePart'local j=f and
+typeof(f)=='CFrame'local k,l,m=e.CFrame,(tick())m=b.PreRender:Connect(function()
+local n=math.min((tick()-l)/g,1)e.CFrame=k:lerp(f,n)if n>=1 then m:Disconnect()e
+.CFrame=f if h then h()end end end)return m end return c end function a.I()local
+b,c,d=a.load'H',game:GetService'Players'.LocalPlayer,Vector3.new(0,-100,0)local
+e,f,g=function()local e=c.Character:GetPivot().Position local f=workspace:
+Raycast(e,d)return f end,{basicAttackCooldown=0.6,specialAttackCooldown=1.9},
+game:GetService'ReplicatedStorage'local h=g.AttackHandlerRemoteEvent function f.
+BasicAttack(j)h:FireServer(j)c.Character:SetAttribute('LastBasicAttack',tick())
+end local j=g.SpecialAttackRemoteEvent_RegularAttack function f.SpecialAttack(k)
+j:FireServer(k)c.Character:SetAttribute('LastSpecialAttack',tick())end function
+f.IsBasicAttackOnCooldown()local k=c.Character:GetAttribute'LastBasicAttack'
+return k and tick()-k<f.basicAttackCooldown end function f.
+IsSpecialAttackOnCooldown()local k=c.Character:GetAttribute'LastSpecialAttack'
+return k and tick()-k<f.specialAttackCooldown end function f.IsOnGrass()local k=
+e()return k and k.Material==Enum.Material.Grass end function f.IsOnWater()local
+k=e()return k and k.Material==Enum.Material.Water end local k=Vector3.new(4,4,4)
+function f.IsInsideTerrain()local l=c.Character if not l then return end local m
+=l.HumanoidRootPart local n=m.Position local o=Region3.new(n,n+k):ExpandToGrid(4
+)local p,q=workspace.Terrain:ReadVoxels(o,4)return q[1][1][1]>0 end local l=80
+function f.TweenTo(m)local n=c.Character if not n then return end local o=n.
+HumanoidRootPart local p=o.Position local q=(m.Position-p).Magnitude/l b:
+TweenPartCFrame(o,m,q)return q end function f.TweenToAsync(m)local n=f.TweenTo(m
+)task.wait(n)end return f end function a.J()local b=a.load'x'local c,d=b.create,
+a.load'E'return function(e)local f,g=e.icon,e.size or 10 return c'ImageLabel'{
+Name='Icon',AnchorPoint=Vector2.new(0.5,0.5),BackgroundTransparency=1,Image=f.
+image,ImageRectOffset=f.position,ImageRectSize=f.size,Position=UDim2.fromScale(
+0.5,0.5),ScaleType=Enum.ScaleType.Fit,Size=UDim2.fromOffset(g,g),ImageColor3=e.
+color or Color3.new(1,1,1),c'UIFlexItem'{}}end end function a.K()local b,c=a.
+load'y',a.load'x'local d,e=c.create,Color3.fromHSV(0,0,0.4)local f=function(f,g)
+return d'Frame'{Name='FrameHorizontal',AnchorPoint=Vector2.new(0,0.5),
+BackgroundColor3=e,BorderSizePixel=0,Position=UDim2.fromScale(0.5,0.5),Size=
+UDim2.new(0.5,0,0,1)},d'Frame'{Name='FrameVertical',AnchorPoint=Vector2.new(0.5,
+0),BackgroundColor3=e,BorderSizePixel=0,Position=UDim2.fromScale(0.5,0),Size=
+UDim2.new(0,1,f and 0.5 or 1,0)},d'UISizeConstraint'{MinSize=Vector2.new(0,0),
+MaxSize=Vector2.new(g,g)}end local g=function(g)b(g,{isFinalizer='boolean',size=
+'number?'})local h,j=g.isFinalizer,g.size or 20 return d'Frame'{Size=UDim2.new(0
+,j,0,j),BackgroundTransparency=1,f(h,j)}end return g end function a.L()local b={
+states={character={controlled=false,priority=0,owner=nil},camera={controlled=
+false,priority=0,owner=nil}},timeouts={},events={}}function b.requestControl(c,d
+,e,f,g)local h=c.states[e]if not h then return false end if h.controlled and f<=
+h.priority then return false end if h.controlled then c:releaseControl(e)end h.
+controlled=true h.priority=f h.owner=d if g then c.timeouts[e]=task.delay(g,
+function()if h.owner==d then c:releaseControl(e)end end)end c:emit(
+'control_taken',{controlType=e,owner=d,priority=f})return true end function b.
+releaseControl(c,d,e)local f=c.states[d]if not f or not f.controlled then return
+end if e and f.owner~=e then return end local g=f.owner f.controlled=false f.
+priority=0 f.owner=nil if c.timeouts[d]then task.cancel(c.timeouts[d])c.timeouts
+[d]=nil end c:emit('control_released',{controlType=d,owner=g})end function b.
+hasControl(c,d,e)local f=c.states[e]return f and f.controlled and f.owner==d end
+function b.canTakeControl(c,d,e)local f=c.states[d]return not f or not f.
+controlled or e>f.priority end function b.emit(c,d,e)local f=c.events[d]or{}for
+g,h in ipairs(f)do task.spawn(h,e)end end function b.on(c,d,e)if not c.events[d]
+then c.events[d]={}end table.insert(c.events[d],e)end return b end function a.M(
+)local b=a.load'x'local c,d,e,f,g,h,j,k=b.cleanup,b.effect,b.source,b.create,a.
+load'J',a.load'F',a.load'K',a.load'L'local l=function(l)local m=l.isChecked if
+not m or type(m)=='boolean'then m=e(m or false)end c(function()if m()then print(
+l.label,m())m(false)end end)local n,o,p=l.isDisabled or e(false),l.childs and e(
+l.childs),tostring{}local q,r,s,t=function()if not l.controlPriority then return
+true end local q={}for r,s in pairs(l.controlPriority)do if k:requestControl(p,r
+,s,l.controlTimeout)then table.insert(q,r)else for t,u in ipairs(q)do k:
+releaseControl(u,p)end return false end end return true end,function()if not l.
+controlPriority then return true end for q,r in pairs(l.controlPriority)do if
+not k:hasControl(p,q)then return false end end return true end,function()if not
+l.controlPriority then return end for q,r in pairs(l.controlPriority)do k:
+releaseControl(q,p)end end,{}local u,v,w=function(u)table.insert(t,u)end,
+function()for u,v in ipairs(t)do if v.Connected then v:Disconnect()end end t={}
+end,function()local u=l.WhileChecked if not u then return end while m()do local
+v=r()if v or q()then local w=u()if w==false then s()end end task.wait()end end
+local x=function(x)if l.OnChanged then task.spawn(l.OnChanged,x)end if x then if
+l.WhenChecked then task.spawn(l.WhenChecked,u)end task.spawn(w)else v()s()end
+end d(function()x(m())end)local y=f'Frame'{Name='Checkbox',
+BackgroundTransparency=1,Size=UDim2.new(1,0,0,20),f'UIListLayout'{FillDirection=
+Enum.FillDirection.Horizontal,HorizontalFlex=Enum.UIFlexAlignment.Fill,SortOrder
+=Enum.SortOrder.LayoutOrder,VerticalAlignment=Enum.VerticalAlignment.Center},h{
+content=l.label},f'ImageButton'{Name='CheckButton',BackgroundColor3=Color3.
+fromHSV(0,0,1),BackgroundTransparency=0,Size=UDim2.fromOffset(18,18),Activated=
+function()if not n()then m(not m())end end,f'UICorner'{CornerRadius=UDim.new(0,6
+)},g{icon={image='rbxassetid://84900867946882',size=Vector2.zero,position=
+Vector2.zero},color=Color3.new(0,0,0),size=10},f'UIFlexItem'{}}}d(function()
+local z=n()and 0.5 or 0 y.CheckButton.Active=not n()y.CheckButton.Transparency=z
+y.Label.TextTransparency=z end)d(function()local z=m()local A=z and Color3.new(1
+,1,1)or Color3.fromRGB(40,40,40)y.CheckButton.BackgroundColor3=A y.CheckButton.
+Icon.Visible=z end)if not o then return y end return f'Frame'{
+BackgroundTransparency=1,Size=UDim2.fromScale(1,0),AutomaticSize=Enum.
+AutomaticSize.Y,f'UIListLayout'{HorizontalAlignment=Enum.HorizontalAlignment.
+Left,VerticalAlignment=Enum.VerticalAlignment.Top,FillDirection=Enum.
+FillDirection.Vertical},y,b.indexes(o,function(z,A)return f'Frame'{Size=UDim2.
+fromScale(1,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,f
+'UIListLayout'{Padding=UDim.new(0,4),HorizontalAlignment=Enum.
+HorizontalAlignment.Left,VerticalAlignment=Enum.VerticalAlignment.Center,
+FillDirection=Enum.FillDirection.Horizontal,HorizontalFlex=Enum.UIFlexAlignment.
+Fill},j{isFinalizer=A==#o()},z()}end)}end return l end function a.N()local b=a.
+load'x'local c,d,e=b.source,a.load'I',a.load'M'local f,g,h,j,k,l,m,n,o=c(true),
+c(true),c(39),c(false),c(false),c(true),c(true),c(false),game:GetService
+'Players'local p,q,r=function(p)local q,r,s,t,u=(h()+1)for v,w in o:GetPlayers()
+do local x=false repeat if v==1 then x=true break end local y=w.Character if not
+y then x=true break end local z=y:FindFirstChildOfClass'Humanoid'if not z then x
+=true break end if z.Health<=0 then x=true break end local A=y:FindFirstChild
+'HumanoidRootPart'if not A then x=true break end local B=A.Position local C=(p-B
+).magnitude if C<q then r,s,t,u,q=y,A,z,B,C end x=true until true if not x then
+break end end return r,s,t,u end,(o.LocalPlayer)return{e{label='Enabled',
+WhileChecked=function()local s=q.Character if not s then return end local t=s.
+HumanoidRootPart local u=t.Position local v,w,x,y=p(u)if v then r=v else v=r if
+not r then return end x=v:FindFirstChildOfClass'Humanoid'if not x or x.Health<=0
+then r=nil return end w=v.HumanoidRootPart y=w.Position if not v then return end
+end if f()and not d.IsBasicAttackOnCooldown()then d.BasicAttack(x)end if g()and
+not d.IsSpecialAttackOnCooldown()then d.SpecialAttack(x)end if j()then local z,A
+=(u-y).unit,h()-5 t.CFrame=CFrame.new(y+(z*A)+w.Velocity,y)end end},e{label=
+'Use basic attack',isChecked=f},e{label='Use special attack',isChecked=g},e{
+label='Follow target',isChecked=j,childs={e{label='Ghost mode',isChecked=k}}},e{
+label='Ignore friends',isChecked=l},e{label='Ignore group members',isChecked=m},
+e{label='Attack only hostile',isChecked=n}}end function a.O()a.load'E'return{
+icon={image='rbxassetid://10723434557'},sections={{name='Kill aura',content=a.
+load'N'}}}end function a.P()local b=a.load'x'local c,d,e,f,g=b.source,a.load'M',
+game.ReplicatedStorage.PlayerDamageSelfRemoteEvent,game.ReplicatedStorage.
+SpawnAsCharacterRemoteFunction,game:GetService'Players'.LocalPlayer local h=c(
+false)local j,k=function(j)return j:GetAttributeChangedSignal'InCombat':Connect(
+function()if j:GetAttribute'InCombat'then h(true)end end)end,function(j)return j
+:GetAttributeChangedSignal'InCombat':Connect(function()if not j:GetAttribute
+'InCombat'then h(false)end end)end return{d{label='Enabled',isChecked=h,
+OnChanged=function(l)if l then e:FireServer(0/0)else local m=g.character if m
+then f:InvokeServer(m:GetAttribute'CharacterName')end end end,childs={d{label=
+'Enables when entering combat',WhenChecked=function(l)local m=g.character if m
+then l(j(m))end l(g.CharacterAdded:Connect(j))end},d{label=
+'Disables when leaving combat',WhenChecked=function(l)local m=g.character if m
+then l(k(m))end l(g.CharacterAdded:Connect(k))end}}}}end function a.Q()local b={
+}function b.GenerateCirclePoints(c,d,e)local f=2*math.pi*d local g=math.max(3,
+math.floor(f/e))local h,j=(2*math.pi)/g,{}for k=0,g-1 do local l=k*h local m,n=c
+.X+d*math.cos(l),c.Z+d*math.sin(l)local o=Vector3.new(m,c.Y,n)table.insert(j,o)
+end return j,g end return b end function a.R()local b,c=a.load'I',game:
+GetService'ReplicatedStorage'local d,e,f=c:WaitForChild
+'AskServerToSetSubStateRemoteFunction',false f=hookmetamethod(game,'__namecall',
+function(g,...)if e then local h=g==d if h and not checkcaller()then if not
+checkcaller()then return true end end end return f(g,...)end)local g,h,j,k=
+function(g)e=not g end,function(g)task.spawn(d.InvokeServer,d,g)end,require(c:
+WaitForChild'AnimalGameFrameworkShared':WaitForChild'Utils'),require(c.Shared.
+AnimalConfig)local l,m,n,o,p,q,r=function(l,m)if l then if l:GetAttribute
+'IsCarrying'then return elseif m or not l:GetAttribute'MovementDisabled'then if
+l:FindFirstChild'Head'then local n,o=l:GetAttribute'AnimalType',l:GetAttribute
+'AnimalName'if n and(o and l:GetAttribute'AnimalAge')then local p=k[n][o]local q
+=j.CanEatDrink.DetectMeatGrassWater(l,p)local r=q=='Drink'and'Drinking'or
+'Eating'return p.EnableLeavesEating and j.DetectLeaves(l)or(p.EnableInsectEating
+and j.DetectInsects(l)or q)else warn
+"Not spawned as animal, so we can't check eat/drink"end else return end else
+return end else return end end,4,Vector3.new(0,40,0),Vector3.new(0,-80,0),a.load
+'Q',Enum.Material.Grass,RaycastParams.new()r.FilterType=Enum.RaycastFilterType.
+Include r.FilterDescendantsInstances={workspace.Terrain}local s=6 local t=s*8
+local function FindNearestGrass(u,v)local w=p.GenerateCirclePoints(u+n,v,m)for x
+,y in w do local z=workspace:Raycast(y,o,r)if z and z.Material==q then return z.
+Position end end if v==t then return end return FindNearestGrass(u,v*2)end local
+u,v,w,x=game:GetService'Players'.LocalPlayer,a.load'M',a.load'H',a.load'x'local
+y=x.source local z=y(true)return{v{label='Auto eat',controlPriority={character=2
+},WhileChecked=function()local A=u.Character if not A then return end if A:
+GetAttribute'Food'<99 then local B=l(A)if B=='Eat'then g(false)h'Eating'elseif
+z()then local C=A.HumanoidRootPart local D=C.Position local E=FindNearestGrass(D
+,s)if not E then return end local F=A.Humanoid local G=Vector3.new(0,F.HipHeight
+,0)local H=E+G local I=(H-D)b.TweenToAsync(CFrame.lookAlong(H-I.Unit,I))else
+return false end else return false end end},v{label='Auto drink',controlPriority
+={character=2},WhileChecked=function()local A=u.Character if A:GetAttribute
+'Water'<99 then local B=l(A)if B=='Drink'then g(false)h'Drinking'elseif z()then
+local C=A.HumanoidRootPart if not C then return end local D,E=C.Position,
+workspace.MainWaterPart.Position.Y b.TweenToAsync(CFrame.new(D.X,E,D.Z))else
+return false end else return false end end},v{label=
+'Go to nearest food/water source',isChecked=z}}end function a.S()local b=a.load
+'x'local c,d,e,f=b.source,a.load'I',a.load'M',game:GetService'Players'.
+LocalPlayer return{e{label='Automatically leave from inside terrain',isChecked=
+true,controlPriority={character=1},WhileChecked=function()if d.IsInsideTerrain()
+then local g=f.Character if not g then return end local h=g.HumanoidRootPart h.
+CFrame=CFrame.new(h.Position+Vector3.new(0,20,0))else return false end end}}end
+function a.T()local b=a.load'E'return{icon=b.untitled.icons['user-02'],sections=
+{{name='Godmode',content=a.load'P'},{name='Eat-drink',content=a.load'R'},{name=
+'Misc',content=a.load'S'}}}end function a.U()local b=a.load'E'return{icon=b.
+untitled.icons['eye-off'],sections={}}end function a.V()local b=a.load'E'return{
+icon=b.untitled.icons['globe-03'],sections={}}end function a.W()local b=a.load
+'E'return{icon=b.untitled.icons['dots-horizontal'],sections={}}end function a.X(
+)a.load'E'return{categories={a.load'O',a.load'T',a.load'U',a.load'V',a.load'W'}}
+end end local b=a.load'x'local c,d,e,f,g=b.source,b.create,b.root,a.load'C',a.
+load'G'function App()local h,j,k={},{},{}for l,m in a.load'X'.categories do
+local n=c(l==1)k[l]=n local o,p=g{icon=m.icon,isOpened=n,sections=m.sections}h[l
+]=o j[l]=p end return d'ScreenGui'{f{categories=h,containers=j,isOpenedSources=k
+}}end if not game:IsLoaded()then game.Loaded:Wait()end local h h=e(function()
+local j=App()j.Parent=game:GetService'CoreGui'j.ZIndexBehavior=Enum.
+ZIndexBehavior.Global shared.LECleanup=function()h()j:Destroy()end end)
