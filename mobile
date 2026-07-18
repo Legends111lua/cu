@@ -363,6 +363,37 @@ local function getAdaptiveFollowHeight(focusRoot)
 	return Settings.followHeight
 end
 
+local smoothedFollowHeight = Settings.followHeight
+local lastFollowHeightUpdate = tick()
+
+local function smoothFollowHeight(desiredHeight)
+	local now = tick()
+	local deltaTime = math.min(now - lastFollowHeightUpdate, 0.1)
+	lastFollowHeightUpdate = now
+	local maxStep = 6 * deltaTime
+	local difference = desiredHeight - smoothedFollowHeight
+	smoothedFollowHeight += math.clamp(difference, -maxStep, maxStep)
+	return smoothedFollowHeight
+end
+
+local function getWaterSurfaceY(targetCharacter, targetRoot)
+	local humanoid = targetCharacter and targetCharacter:FindFirstChildOfClass("Humanoid")
+	local swimming = humanoid and humanoid:GetState() == Enum.HumanoidStateType.Swimming
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { LocalPlayer.Character, targetCharacter }
+	params.IgnoreWater = false
+	local hit = workspace:Raycast(
+		targetRoot.Position + Vector3.new(0, 80, 0),
+		Vector3.new(0, -180, 0),
+		params
+	)
+	if hit and hit.Material == Enum.Material.Water then
+		return hit.Position.Y, true
+	end
+	return nil, swimming == true
+end
+
 local lastTarget
 local ragdollTeleportBusy = false
 local followHasTarget = false
@@ -940,14 +971,19 @@ local function runKillAura()
 
 	if Settings.followTarget then
 		local distance = (targetPosition - root.Position).Magnitude
-		if distance > Settings.descentDistance and not ragdollTeleportBusy then
+		local waterSurfaceY, targetInWater = getWaterSurfaceY(target, targetRoot)
+		if distance > Settings.descentDistance and not ragdollTeleportBusy and not targetInWater then
 			task.spawn(ragdollTeleport, targetRoot)
 		elseif not ragdollTeleportBusy then
 			local predictedPosition = targetPosition + targetRoot.AssemblyLinearVelocity * 0.2
-			local activeFollowHeight = getAdaptiveFollowHeight(targetRoot)
+			local activeFollowHeight = smoothFollowHeight(getAdaptiveFollowHeight(targetRoot))
 			local destination = predictedPosition
 				- targetRoot.CFrame.LookVector * Settings.followDistance
 				+ Vector3.new(0, activeFollowHeight, 0)
+			if waterSurfaceY then
+				local safeWaterY = waterSurfaceY + Settings.followHeight + 3
+				destination = Vector3.new(destination.X, math.max(destination.Y, safeWaterY), destination.Z)
+			end
 			local offset = destination - root.Position
 			local flightVelocity
 			if offset.Magnitude > 2 then
@@ -958,7 +994,10 @@ local function runKillAura()
 			end
 
 			-- Watchdog vertical: estando abaixo da faixa segura, sobe imediatamente.
-			local minimumSafeY = targetPosition.Y + activeFollowHeight - 2
+			local minimumSafeY = math.max(
+				targetPosition.Y + activeFollowHeight - 2,
+				waterSurfaceY and waterSurfaceY + Settings.followHeight + 1 or -math.huge
+			)
 			if root.Position.Y < minimumSafeY then
 				flightVelocity = Vector3.new(
 					flightVelocity.X,
