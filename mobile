@@ -1,3 +1,6 @@
+-- Versao legivel do payload funcional de "savannah trabalhos.txt".
+-- A biblioteca de UI minificada (Vide 0.3.1) e o atlas de icones foram omitidos.
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -324,11 +327,41 @@ local Settings = {
 	fly = false,
 	esp = false,
 	followHeight = 8,
+	crowdedFollowHeight = 16,
+	elephantFollowHeight = 18,
+	crowdDetectionRadius = 55,
 	followDistance = 5,
 	followSpeed = 80,
 	cruiseHeight = 65,
 	descentDistance = 200,
 }
+
+local function getAdaptiveFollowHeight(focusRoot)
+	if not focusRoot then return Settings.followHeight end
+	local focusCharacter = focusRoot.Parent
+	local animalName = focusCharacter and tostring(focusCharacter:GetAttribute("AnimalName") or focusCharacter.Name or "") or ""
+	local animalType = focusCharacter and tostring(focusCharacter:GetAttribute("AnimalType") or "") or ""
+	if string.find(string.lower(animalName), "elephant", 1, true)
+		or string.find(string.lower(animalType), "elephant", 1, true) then
+		return Settings.elephantFollowHeight
+	end
+
+	local nearbyPlayers = 0
+	for _, player in Players:GetPlayers() do
+		if player == LocalPlayer then continue end
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if root and humanoid and humanoid.Health > 0
+			and (root.Position - focusRoot.Position).Magnitude <= Settings.crowdDetectionRadius then
+			nearbyPlayers += 1
+			if nearbyPlayers >= 2 then
+				return Settings.crowdedFollowHeight
+			end
+		end
+	end
+	return Settings.followHeight
+end
 
 local lastTarget
 local ragdollTeleportBusy = false
@@ -711,12 +744,13 @@ local function runKillAura()
 			-- Sem ponto de descanso, nunca deixa o personagem cair no meio dos alvos.
 			local _, nearbyRoot = findNearestTarget(root.Position, math.huge)
 			if Settings.followTarget and nearbyRoot then
-				local hoverDestination = nearbyRoot.Position + Vector3.new(0, Settings.followHeight, 0)
+				local restFollowHeight = getAdaptiveFollowHeight(nearbyRoot)
+				local hoverDestination = nearbyRoot.Position + Vector3.new(0, restFollowHeight, 0)
 				local hoverOffset = hoverDestination - root.Position
 				local hoverVelocity = hoverOffset.Magnitude > 1
 					and hoverOffset.Unit * math.min(Settings.followSpeed, math.max(35, hoverOffset.Magnitude * 4))
 					or Vector3.zero
-				if root.Position.Y < nearbyRoot.Position.Y + Settings.followHeight - 2 then
+				if root.Position.Y < nearbyRoot.Position.Y + restFollowHeight - 2 then
 					hoverVelocity = Vector3.new(hoverVelocity.X, math.max(hoverVelocity.Y, 14), hoverVelocity.Z)
 				end
 				setFlight(root, hoverVelocity, nearbyRoot.Position - root.Position)
@@ -883,9 +917,10 @@ local function runKillAura()
 			task.spawn(ragdollTeleport, targetRoot)
 		elseif not ragdollTeleportBusy then
 			local predictedPosition = targetPosition + targetRoot.AssemblyLinearVelocity * 0.2
+			local activeFollowHeight = getAdaptiveFollowHeight(targetRoot)
 			local destination = predictedPosition
 				- targetRoot.CFrame.LookVector * Settings.followDistance
-				+ Vector3.new(0, Settings.followHeight, 0)
+				+ Vector3.new(0, activeFollowHeight, 0)
 			local offset = destination - root.Position
 			local flightVelocity
 			if offset.Magnitude > 2 then
@@ -896,7 +931,7 @@ local function runKillAura()
 			end
 
 			-- Watchdog vertical: estando abaixo da faixa segura, sobe imediatamente.
-			local minimumSafeY = targetPosition.Y + Settings.followHeight - 2
+			local minimumSafeY = targetPosition.Y + activeFollowHeight - 2
 			if root.Position.Y < minimumSafeY then
 				flightVelocity = Vector3.new(
 					flightVelocity.X,
