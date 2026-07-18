@@ -538,7 +538,7 @@ local function leaveRockWait(immediate)
 	if immediate then restoreCollisions() else task.delay(0.5, restoreCollisions) end
 end
 
-local function findSparseWaypoint(origin, character)
+local function findSparseWaypoint(origin, character, rejectWater)
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { character }
@@ -551,7 +551,7 @@ local function findSparseWaypoint(origin, character)
 			local angle = math.rad(index * 30)
 			local flat = origin + Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
 			local hit = workspace:Raycast(flat + Vector3.new(0, 180, 0), Vector3.new(0, -420, 0), params)
-			if hit then
+			if hit and (not rejectWater or hit.Material ~= Enum.Material.Water) then
 				local candidate = hit.Position + Vector3.new(0, 5, 0)
 				local nearestPlayer = math.huge
 				for _, player in Players:GetPlayers() do
@@ -705,15 +705,18 @@ local function ragdollTeleport(targetRoot)
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if root and humanoid then
+		-- Primeiro pousa em um ponto de chao pouco ocupado perto do alvo.
+		local safeLanding = findSparseWaypoint(targetRoot.Position, character, true)
+		local landingPosition = safeLanding and safeLanding.Position
+			or targetRoot.Position - targetRoot.CFrame.LookVector * 12
 		disableFlight(root)
 		root.Anchored = false
 		humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 		for _ = 1, 25 do
 			if LocalPlayer.Character ~= character or not root.Parent or not targetRoot.Parent then break end
 			local targetPosition = targetRoot.Position
-			if (root.Position - targetPosition).Magnitude <= 8 then break end
-			local destination = targetPosition - targetRoot.CFrame.LookVector * 4
-			character:SetPrimaryPartCFrame(CFrame.lookAt(destination, targetPosition))
+			if (root.Position - landingPosition).Magnitude <= 8 then break end
+			character:SetPrimaryPartCFrame(CFrame.lookAt(landingPosition, targetPosition))
 			task.wait()
 		end
 		task.wait(1)
