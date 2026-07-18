@@ -704,11 +704,25 @@ local function runKillAura()
 			if enteredRest and rockWaitPart and not rockWaitBusy then
 				postKillRestUntil = postKillRestUntil or tick() + 3
 			elseif not enteredRest then
-				disableFlight(root)
+				setFlight(root, Vector3.new(0, 16, 0), root.CFrame.LookVector)
 				postKillRestUntil = postKillRestUntil or tick() + 3
 			end
 		else
-			disableFlight(root)
+			-- Sem ponto de descanso, nunca deixa o personagem cair no meio dos alvos.
+			local _, nearbyRoot = findNearestTarget(root.Position, math.huge)
+			if Settings.followTarget and nearbyRoot then
+				local hoverDestination = nearbyRoot.Position + Vector3.new(0, Settings.followHeight, 0)
+				local hoverOffset = hoverDestination - root.Position
+				local hoverVelocity = hoverOffset.Magnitude > 1
+					and hoverOffset.Unit * math.min(Settings.followSpeed, math.max(35, hoverOffset.Magnitude * 4))
+					or Vector3.zero
+				if root.Position.Y < nearbyRoot.Position.Y + Settings.followHeight - 2 then
+					hoverVelocity = Vector3.new(hoverVelocity.X, math.max(hoverVelocity.Y, 14), hoverVelocity.Z)
+				end
+				setFlight(root, hoverVelocity, nearbyRoot.Position - root.Position)
+			else
+				setFlight(root, Vector3.new(0, 12, 0), root.CFrame.LookVector)
+			end
 			postKillRestUntil = postKillRestUntil or tick() + 3
 		end
 
@@ -804,17 +818,15 @@ local function runKillAura()
 		if lastFlightPosition then
 			local correction = root.Position - lastFlightPosition
 			if correction.Y < -15 then
-				postKillRestActive = true
-				postKillRestUntil = nil
-				forceSafeReturn = false
-				lastTarget = nil
-				engagedTarget = nil
-				targetEngagedAt = nil
-				lastFlightPosition = nil
-				followHasTarget = false
-				disableFlight(root)
-				disableCharacterNoclip(character)
-				return
+				-- Uma correcao para baixo exige recuperacao, nunca desligar o voo.
+				local humanoid = character:FindFirstChildOfClass("Humanoid")
+				if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.GettingUp) end
+				root.AssemblyLinearVelocity = Vector3.new(
+					root.AssemblyLinearVelocity.X,
+					math.max(root.AssemblyLinearVelocity.Y, 18),
+					root.AssemblyLinearVelocity.Z
+				)
+				setFlight(root, Vector3.new(0, 18, 0), targetPosition - root.Position)
 			end
 		end
 		lastFlightPosition = root.Position
@@ -875,12 +887,24 @@ local function runKillAura()
 				- targetRoot.CFrame.LookVector * Settings.followDistance
 				+ Vector3.new(0, Settings.followHeight, 0)
 			local offset = destination - root.Position
+			local flightVelocity
 			if offset.Magnitude > 2 then
 				local speed = math.min(Settings.followSpeed, offset.Magnitude * 4)
-				setFlight(root, offset.Unit * speed, targetPosition - root.Position)
+				flightVelocity = offset.Unit * speed
 			else
-				setFlight(root, targetRoot.AssemblyLinearVelocity, targetPosition - root.Position)
+				flightVelocity = targetRoot.AssemblyLinearVelocity
 			end
+
+			-- Watchdog vertical: estando abaixo da faixa segura, sobe imediatamente.
+			local minimumSafeY = targetPosition.Y + Settings.followHeight - 2
+			if root.Position.Y < minimumSafeY then
+				flightVelocity = Vector3.new(
+					flightVelocity.X,
+					math.max(flightVelocity.Y, 14),
+					flightVelocity.Z
+				)
+			end
+			setFlight(root, flightVelocity, targetPosition - root.Position)
 		end
 	end
 end
