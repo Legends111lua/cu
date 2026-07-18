@@ -7,6 +7,22 @@ local StarterGui = game:GetService("StarterGui")
 
 local LocalPlayer = Players.LocalPlayer
 
+-- Completa automaticamente, uma unica vez, o minigame para escapar de um latch.
+local LatchedPlayersNotifyRemote = ReplicatedStorage:WaitForChild("LatchedPlayersNotifyRemoteEvent")
+local autoUnlatchTriggered = false
+local autoUnlatchConnection = LatchedPlayersNotifyRemote.OnClientEvent:Connect(function(latchedPlayers)
+	if typeof(latchedPlayers) ~= "table" then return end
+
+	if #latchedPlayers == 0 then
+		autoUnlatchTriggered = false
+		return
+	end
+
+	if autoUnlatchTriggered then return end
+	autoUnlatchTriggered = true
+	LatchedPlayersNotifyRemote:FireServer()
+end)
+
 local STAFF_MIN_RANK = 3
 local STAFF_GROUP_ID = game.CreatorType == Enum.CreatorType.Group and game.CreatorId or 0
 local detectedStaff = {}
@@ -325,6 +341,8 @@ local MAX_TARGET_ENGAGE_TIME = 15
 local lastFlightPosition
 local characterNoclipParts = {}
 local noclipPulseId = 0
+local basicTargetIndex = 0
+local specialTargetIndex = 0
 local REST_POINTS = {
 	["Mini Ilha"] = {
 		type = "platform",
@@ -810,6 +828,7 @@ local function runKillAura()
 		local useSpecial = Settings.useSpecialAttack and not Combat.isSpecialAttackOnCooldown()
 
 		if useBasic or useSpecial then
+			local enemies = {}
 			for _, player in Players:GetPlayers() do
 				if player == LocalPlayer or not isAllowedTarget(player) then continue end
 				local enemyCharacter = player.Character
@@ -819,9 +838,22 @@ local function runKillAura()
 				local enemyRoot = enemyCharacter and enemyCharacter:FindFirstChild("HumanoidRootPart")
 				if not enemyHumanoid or enemyHumanoid.Health <= 0 or not enemyRoot then continue end
 				if (root.Position - enemyRoot.Position).Magnitude > Settings.range then continue end
+				table.insert(enemies, { player = player, humanoid = enemyHumanoid })
+			end
 
-				if useBasic then Combat.basicAttack(enemyHumanoid) end
-				if useSpecial then Combat.specialAttack(enemyHumanoid) end
+			table.sort(enemies, function(a, b)
+				return a.player.UserId < b.player.UserId
+			end)
+
+			if #enemies > 0 then
+				if useBasic then
+					basicTargetIndex = basicTargetIndex % #enemies + 1
+					Combat.basicAttack(enemies[basicTargetIndex].humanoid)
+				end
+				if useSpecial then
+					specialTargetIndex = specialTargetIndex % #enemies + 1
+					Combat.specialAttack(enemies[specialTargetIndex].humanoid)
+				end
 			end
 		end
 	end
@@ -1438,6 +1470,10 @@ local PublicApi = {
 function PublicApi.cleanup()
 	leaveRockWait(true)
 	disableCharacterNoclip(LocalPlayer.Character)
+	if autoUnlatchConnection then
+		autoUnlatchConnection:Disconnect()
+		autoUnlatchConnection = nil
+	end
 	if staffDetectorGui then
 		staffDetectorGui:Destroy()
 		staffDetectorGui = nil
