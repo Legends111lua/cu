@@ -375,6 +375,7 @@ local REST_TELEPORT_COOLDOWN = 25
 local postKillRestActive = false
 local postKillRestUntil
 local forceSafeReturn = false
+local waitingForOwnShield = false
 local engagedTarget
 local targetEngagedAt
 local MAX_TARGET_ENGAGE_TIME = 15
@@ -713,6 +714,32 @@ local function runKillAura()
 	if not character then return end
 
 	local root = character.HumanoidRootPart
+	local ownShieldActive = isCombatProtected(LocalPlayer, character)
+	if ownShieldActive then
+		local shieldJustStarted = not waitingForOwnShield
+		waitingForOwnShield = true
+		lastTarget = nil
+		engagedTarget = nil
+		targetEngagedAt = nil
+		lastFlightPosition = nil
+		followHasTarget = false
+		disableCharacterNoclip(character)
+
+		if selectedRestPoint then
+			enterRockWait(root, shieldJustStarted)
+		else
+			-- Sem local selecionado, pelo menos evita permanecer no chao em combate.
+			setFlight(root, Vector3.new(0, 12, 0), root.CFrame.LookVector)
+		end
+		return
+	elseif waitingForOwnShield then
+		waitingForOwnShield = false
+		leaveRockWait()
+		lastTarget = nil
+		engagedTarget = nil
+		targetEngagedAt = nil
+		lastFlightPosition = nil
+	end
 
 	if lastTarget and not postKillRestActive then
 		local previousHumanoid = lastTarget:FindFirstChildOfClass("Humanoid")
